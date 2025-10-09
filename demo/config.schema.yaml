@@ -5,7 +5,7 @@ demo:
   properties:
     bootstrap_servers:
       type: string
-      default: "10.83.153.137:9092"
+      default: "localhost:9092"
       description: "Kafka bootstrap servers"
     group_id:
       type: string

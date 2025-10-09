@@ -16,7 +16,7 @@ class CmErrorKafkaSensor(PollingSensor):
 
     def setup(self):
         cfg = self._config.get('message_sensor', {})
-        self._bootstrap_servers = cfg.get('bootstrap_servers', '10.83.153.137:9092')
+        self._bootstrap_servers = cfg.get('bootstrap_servers', 'localhost:9092')
         self._topic = cfg.get('topics', [{}])[0].get('name', 'cmerror')
         self._group_id = cfg.get('topics', [{}])[0].get('group_id', 'st2_cmerror')
         self._trigger = cfg.get('topics', [{}])[0].get('trigger', 'demo.cmerror_trigger')
@@ -24,7 +24,7 @@ class CmErrorKafkaSensor(PollingSensor):
         LOG.info(f"Connecting to Kafka: {self._bootstrap_servers}, topic: {self._topic}")
         self._consumer = KafkaConsumer(
             self._topic,
-            bootstrap_servers="10.83.153.137:9092",
+            bootstrap_servers=self._bootstrap_servers,
             group_id=self._group_id,
             value_deserializer=lambda m: m.decode('utf-8')
         )
