@@ -59,6 +59,7 @@ services:
     container_name: kafka
     ports:
       - "9092:9092"
+    user: root
     environment:
       KAFKA_KRAFT_MODE: "true"
       KAFKA_PROCESS_ROLES: broker,controller
@@ -76,6 +77,7 @@ services:
   st2web:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2web:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     environment:
       ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
       ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
@@ -105,6 +107,7 @@ services:
   st2makesecrets:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     networks:
       - private
     volumes:
@@ -114,6 +117,7 @@ services:
   st2api:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2api:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - mongo
       - rabbitmq
@@ -136,6 +140,7 @@ services:
   st2stream:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2stream:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - st2api
     networks:
@@ -146,6 +151,7 @@ services:
   st2scheduler:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2scheduler:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - redis
       - st2api
@@ -157,6 +163,7 @@ services:
   st2workflowengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2workflowengine:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - redis
       - st2api
@@ -180,6 +187,7 @@ services:
   st2actionrunner:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - redis
       - st2api
@@ -199,6 +207,7 @@ services:
   st2garbagecollector:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2garbagecollector:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - st2api
     networks:
@@ -209,6 +218,7 @@ services:
   st2notifier:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2notifier:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - redis
       - st2api
@@ -220,6 +230,7 @@ services:
   st2rulesengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2rulesengine:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - st2api
     networks:
@@ -230,6 +241,7 @@ services:
   st2sensorcontainer:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2sensorcontainer:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - st2api
     networks:
@@ -244,6 +256,7 @@ services:
   st2timersengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2timersengine:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - st2api
     networks:
@@ -253,6 +266,7 @@ services:
   st2client:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
+    user: root
     depends_on:
       - st2auth
       - st2api
@@ -283,6 +297,7 @@ services:
   st2chatops:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2chatops:${ST2_VERSION:-latest}
     restart: on-failure:5
+    user: root
     depends_on:
       - st2api
       - st2auth
