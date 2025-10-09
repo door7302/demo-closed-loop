@@ -1,0 +1,19 @@
+demo:
+  type: object
+  title: Demo Pack Config Schema
+  description: Configuration schema for the demo pack
+  properties:
+    bootstrap_servers:
+      type: string
+      default: "10.83.153.137:9092"
+      description: "Kafka bootstrap servers"
+    group_id:
+      type: string
+      default: "st2_demo"
+      description: "Kafka consumer group ID"
+    topic:
+      type: string
+      default: "demo_topic"
+      description: "Kafka topic name"
+  additionalProperties: false
+  required: true  # <-- boolean, not a list

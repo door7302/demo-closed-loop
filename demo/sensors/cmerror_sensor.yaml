@@ -1,0 +1,5 @@
+---
+class_name: "CmErrorKafkaSensor"
+entry_point: "cmerror_sensor.py"
+description: "Sensor which monitors Kafka topic for CM error messages."
+trigger_types: []

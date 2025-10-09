@@ -1,0 +1,6 @@
+pack: demo
+values:
+  demo:
+    bootstrap_servers: 10.83.153.137:9092
+    group: st2_cmerror
+    topic: cmerror

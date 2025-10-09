@@ -1,0 +1,9 @@
+---
+name: "cmerror_trigger"
+pack: "demo"
+description: "Trigger fired when Kafka receives cmerror message"
+payload_schema:
+  type: "object"
+  properties:
+    message:
+      type: "string"

@@ -1,0 +1,10 @@
+name: "run_python_script"
+pack: "demo"
+runner_type: "python-script"
+entry_point: "scripts/logic.py"
+enabled: true
+description: "Run Python script with Kafka message"
+parameters:
+  message:
+    type: "string"
+    required: true

@@ -1,0 +1,11 @@
+---
+name: "cmerror_rule"
+pack: "demo"
+description: "Execute Python script when cmerror message received"
+enabled: true
+trigger:
+  type: "demo.cmerror_trigger"
+action:
+  ref: "core.local"
+  parameters:
+    cmd: "python3 /opt/stackstorm/packs.dev/demo/scripts/logic.py '{{trigger.message}}'"
