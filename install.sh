@@ -83,6 +83,7 @@ prepare_folders() {
 
     # Copy StackStorm demo packs
     mkdir -p "${STACKSTORM_DIR}/packs.dev"
+    mkdir -p "${STACKSTORM_DIR}/virtualenvs"
     cp -r "${DEMO_REPO}/demo" "${STACKSTORM_DIR}/packs.dev/" || err "Missing /demo directory in demo repo"
 }
 

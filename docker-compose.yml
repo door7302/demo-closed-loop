@@ -199,7 +199,7 @@ services:
       - stackstorm-packs-configs:/opt/stackstorm/configs:rw
       - stackstorm-packs:/opt/stackstorm/packs:rw
       - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:rw
-      - stackstorm-virtualenvs:/opt/stackstorm/virtualenvs:rw
+      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:rw
       - stackstorm-ssh:/home/stanley/.ssh
       # Action runner needs access to keys since action definitions (Jinja
       # templates) can reference secrets
@@ -352,7 +352,7 @@ volumes:
     stackstorm-packs:
     stackstorm-packs-configs:
     stackstorm-keys:
-    stackstorm-virtualenvs:
+    /opt/stackstorm/virtualenvs:
     stackstorm-ssh:
 
 networks:
