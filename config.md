@@ -4,6 +4,7 @@ export PATH=$PATH:/opt/kafka/bin
 kafka-topics.sh --create --bootstrap-server 10.83.153.137:9092 --replication-factor 1 --partitions 1 --topic cmerror
 kafka-topics.sh --list --bootstrap-server 10.83.153.137:9092
 
+Ch@ngeMe
 
 # 1. Register pack
 st2 pack register /opt/stackstorm/packs.dev/demo && \
@@ -13,7 +14,7 @@ st2ctl reload --register-recreate-virtualenvs && \
 # 3. Restart sensor container to pick up new sensors
 docker restart demo-repo-st2sensorcontainer-1
 
-
+{"message_sensor":{"bootstrap_servers":"10.83.153.137:9092","topics":[{"name":"cmerror","group_id":"st2_cmerror","trigger":"demo.cmerror_trigger"}]}}
 GUI > PACK > DEMO 
 
 Copy in : 

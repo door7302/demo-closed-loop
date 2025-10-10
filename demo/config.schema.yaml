@@ -1,29 +1,28 @@
-demo:
-  type: object
-  title: Demo Pack Config Schema
-  description: Configuration schema for the demo pack
-  properties:
-    message_sensor:
-      type: object
-      properties:
-        bootstrap_servers:
-          type: string
-          default: "localhost:9092"
-        topics:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              group_id:
-                type: string
-              trigger:
-                type: string
-          default:
-            - name: "cmerror"
-              group_id: "st2_cmerror"
-              trigger: "demo.cmerror_trigger"
-      additionalProperties: false
-  additionalProperties: false
-  required: true   # ✅ must be boolean, not a list
+type: object
+title: Demo Pack Config Schema
+description: Configuration schema for the demo pack
+properties:
+  message_sensor:
+    type: object
+    properties:
+      bootstrap_servers:
+        type: string
+        default: "localhost:9092"
+      topics:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            group_id:
+              type: string
+            trigger:
+              type: string
+        default:
+          - name: "cmerror"
+            group_id: "st2_cmerror"
+            trigger: "demo.cmerror_trigger"
+    additionalProperties: false
+additionalProperties: false
+required: true   # ✅ must be boolean, not a list
