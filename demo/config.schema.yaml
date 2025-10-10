@@ -15,5 +15,30 @@ demo:
       type: string
       default: "demo_topic"
       description: "Kafka topic name"
+    message_sensor:
+      type: object
+      properties:
+        bootstrap_servers:
+          type: string
+          default: "localhost:9092"
+        topics:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              group_id:
+                type: string
+              trigger:
+                type: string
+          default:
+            - name: "cmerror"
+              group_id: "st2_cmerror"
+              trigger: "demo.cmerror_trigger"
+      additionalProperties: false
   additionalProperties: false
-  required: true  # <-- boolean, not a list
+  required:
+    - bootstrap_servers
+    - group_id
+    - topic

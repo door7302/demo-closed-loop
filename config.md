@@ -12,6 +12,19 @@ Copy in :
 
 {"bootstrap_servers": "10.83.153.137:9092", "group_id": "st2_cmerror", "topic": "cmerror"}
 
+{
+  "message_sensor": {
+    "bootstrap_servers": "10.83.153.137:9092",
+    "topics": [
+      {
+        "name": "cmerror",
+        "group_id": "st2_cmerror",
+        "trigger": "demo.cmerror_trigger"
+      }
+    ]
+  }
+}
+
 Install demo package:  
 
 docker compose exec st2client bash 
@@ -42,3 +55,6 @@ docker logs -f demo-repo-st2sensorcontainer-1
 docker compose logs -f st2api
 
 docker compose exec st2client bash 
+
+
+st2 pack register /opt/stackstorm/packs/demo
