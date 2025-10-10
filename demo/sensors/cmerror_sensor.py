@@ -33,7 +33,7 @@ class CmErrorKafkaSensor(PollingSensor):
         for message in self._consumer:
             LOG.info(f"Received message on {self._topic}: {message.value}")
             try:
-                payload = json.loads(message.value)
+                payload = {'message': json.loads(message.value)}
             except Exception:
                 payload = {'message': message.value}
 
