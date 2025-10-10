@@ -249,7 +249,7 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-virtualenvs:/opt/stackstorm/virtualenvs:ro
+      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:ro
       - stackstorm-packs:/opt/stackstorm/packs:ro
       - stackstorm-packs-configs:/opt/stackstorm/configs:ro
       - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:ro

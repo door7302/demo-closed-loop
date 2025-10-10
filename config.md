@@ -5,6 +5,14 @@ kafka-topics.sh --create --bootstrap-server 10.83.153.137:9092 --replication-fac
 kafka-topics.sh --list --bootstrap-server 10.83.153.137:9092
 
 
+# 1. Register pack
+st2 pack register /opt/stackstorm/packs.dev/demo && \
+st2 run packs.setup_virtualenv packs=demo
+# 2. Recreate virtualenv and install requirements
+st2ctl reload --register-recreate-virtualenvs && \
+# 3. Restart sensor container to pick up new sensors
+docker restart demo-repo-st2sensorcontainer-1
+
 
 GUI > PACK > DEMO 
 
