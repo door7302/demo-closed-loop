@@ -95,7 +95,7 @@ services:
       - /opt/stackstorm/scripts/st2web-healthcheck.sh:/st2web-healthcheck.sh
       # If you want to use a custom st2web config, edit /opt/stackstorm/files/config.js accordingly and
       # uncomment the line below
-      #- /opt/stackstorm/files/config.js:/opt/stackstorm/static/webui/config.js:ro
+      #- /opt/stackstorm/files/config.js:/opt/stackstorm/static/webui/config.js:rw
     ports:
       - "${ST2_EXPOSE_HTTP:-127.0.0.1:80}:80"
       # - "${ST2_EXPOSE_HTTPS:-127.0.0.1:443}:443"
@@ -127,10 +127,10 @@ services:
       ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
       ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - /opt/stackstorm/keys:/etc/st2/keys:ro
-      - /opt/stackstorm/config:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
       - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
       - /opt/stackstorm/files/rbac:/opt/stackstorm/rbac:rw
       - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
@@ -142,8 +142,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2scheduler:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2scheduler:${ST2_VERSION:-latest}
     restart: on-failure
@@ -153,8 +153,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2workflowengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2workflowengine:${ST2_VERSION:-latest}
     restart: on-failure
@@ -164,9 +164,9 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - /opt/stackstorm/keys:/etc/st2/keys:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
   st2auth:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2auth:${ST2_VERSION:-latest}
     restart: on-failure
@@ -175,9 +175,9 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - /opt/stackstorm/files/htpasswd:/etc/st2/htpasswd:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/files/htpasswd:/etc/st2/htpasswd:rw
   st2actionrunner:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
@@ -187,16 +187,16 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - /opt/stackstorm/config:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
       - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
       - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
       - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:rw
       - /opt/stackstorm/ssh:/home/stanley/.ssh
       # Action runner needs access to keys since action definitions (Jinja
       # templates) can reference secrets
-      - /opt/stackstorm/keys:/etc/st2/keys:ro
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
   st2garbagecollector:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2garbagecollector:${ST2_VERSION:-latest}
     restart: on-failure
@@ -205,8 +205,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2notifier:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2notifier:${ST2_VERSION:-latest}
     restart: on-failure
@@ -216,8 +216,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2rulesengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2rulesengine:${ST2_VERSION:-latest}
     restart: on-failure
@@ -226,8 +226,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2sensorcontainer:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2sensorcontainer:${ST2_VERSION:-latest}
     restart: on-failure
@@ -236,12 +236,12 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:ro
-      - /opt/stackstorm/packs:/opt/stackstorm/packs:ro
-      - /opt/stackstorm/config:/opt/stackstorm/configs:ro
-      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
   st2timersengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2timersengine:${ST2_VERSION:-latest}
     restart: on-failure
@@ -250,7 +250,7 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
   st2client:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
@@ -268,14 +268,14 @@ services:
       ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
       TZ: ${TZ:-UTC}
     volumes:
-      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
       # Technically, client container doesn't need or should have access to the
       # keys in prod setup, but here we make it available to end user for
       # testing and transparency reasons since this setup is primarily mean to
       # be used for testing and development.
-      - /opt/stackstorm/keys:/etc/st2/keys:ro
-      - /opt/stackstorm/config:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
       - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
       - /opt/stackstorm/files/rbac:/opt/stackstorm/rbac:rw
       - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
