@@ -24,21 +24,13 @@ KAFKA_URL="https://downloads.apache.org/kafka/${KAFKA_VERSION}/${KAFKA_TGZ}"
 log() { echo -e "\033[1;32m[+] $*\033[0m"; }
 err() { echo -e "\033[1;31m[ERROR] $*\033[0m" >&2; exit 1; }
 
-ensure_dir() {
-    local dir="$1"
-    if [ ! -d "$dir" ]; then
-        log "Creating missing directory: $dir"
-        mkdir -p "$dir"
-    fi
-}
-
 #------------------------------------------------------------
 # INSTALL STACKSTORM
 #------------------------------------------------------------
 install_stackstorm() {
     log "Installing StackStorm (st2-docker)..."
 
-    ensure_dir "${STACKSTORM_DIR}"
+    mkdir -p "${STACKSTORM_DIR}"
     cd "${STACKSTORM_DIR}"
 
     if [ ! -d "${STACKSTORM_DIR}/.git" ]; then
@@ -54,7 +46,7 @@ install_stackstorm() {
 install_kafka() {
     log "Installing Kafka tools version ${KAFKA_VERSION}..."
 
-    ensure_dir "${KAFKA_DIR}"
+    mkdir -p "${KAFKA_DIR}"
     cd /tmp
 
     if [ ! -d "${KAFKA_DIR}/bin" ]; then
@@ -73,58 +65,31 @@ install_kafka() {
 prepare_folders() {
     log "Creating directory structure under /opt..."
 
-    ensure_dir /opt/telegraf/metadata
-    ensure_dir /opt/telegraf/cert
-    ensure_dir /opt/influxdb/data
-    ensure_dir /opt/grafana/cert
-    ensure_dir /opt/grafana/provisioning/datasources
-    ensure_dir /opt/grafana/provisioning/dashboards
-    ensure_dir /opt/grafana/data
-    ensure_dir /opt/grafana/plugins
-    ensure_dir "${DEMO_DIR}"
-    ensure_dir "${STACKSTORM_DIR}/packs.dev"
-    ensure_dir "${STACKSTORM_DIR}/virtualenvs"
+    mkdir -p /opt/telegraf/{metadata,cert}
+    mkdir -p /opt/influxdb/data
+    mkdir -p /opt/grafana/{cert,provisioning/{datasources,dashboards},data,plugins}
+    mkdir -p "${DEMO_DIR}"
 
     log "Copying demo configuration from ${DEMO_REPO}..."
 
-    # Safely copy Grafana, InfluxDB, Telegraf configs
-    if [ -d "${DEMO_REPO}/grafana" ]; then
-        cp -r "${DEMO_REPO}/grafana/"* /opt/grafana/
-    else
-        err "Missing /grafana directory in demo repo"
-    fi
-
-    if [ -d "${DEMO_REPO}/influxdb" ]; then
-        cp -r "${DEMO_REPO}/influxdb/"* /opt/influxdb/
-    else
-        err "Missing /influxdb directory in demo repo"
-    fi
-
-    if [ -d "${DEMO_REPO}/telegraf" ]; then
-        cp -r "${DEMO_REPO}/telegraf/"* /opt/telegraf/
-    else
-        err "Missing /telegraf directory in demo repo"
-    fi
+    # Copy Grafana, InfluxDB, Telegraf configs
+    cp -r "${DEMO_REPO}/grafana/"* /opt/grafana/ || err "Missing /grafana directory in demo repo"
+    cp -r "${DEMO_REPO}/influxdb/"* /opt/influxdb/ || err "Missing /influxdb directory in demo repo"
+    cp -r "${DEMO_REPO}/telegraf/"* /opt/telegraf/ || err "Missing /telegraf directory in demo repo"
 
     # Copy docker-compose and env file
-    if [ -f "${DEMO_REPO}/docker-compose.yml" ]; then
-        cp "${DEMO_REPO}/docker-compose.yml" "${DEMO_DIR}/"
-    else
-        err "Missing docker-compose.yml in demo repo"
-    fi
+    cp "${DEMO_REPO}/docker-compose.yml" "${DEMO_DIR}/" || err "Missing docker-compose.yml in demo repo"
+    cp "${DEMO_REPO}/.env" "${DEMO_DIR}/" || err "Missing .env file in demo repo"
 
-    if [ -f "${DEMO_REPO}/.env" ]; then
-        cp "${DEMO_REPO}/.env" "${DEMO_DIR}/"
-    else
-        err "Missing .env file in demo repo"
-    fi
+    # Copy StackStorm demo packs
+    mkdir -p "${STACKSTORM_DIR}/packs.dev"
+    mkdir -p "${STACKSTORM_DIR}/opt/packs"
+    mkdir -p "${STACKSTORM_DIR}/opt/packs-configs"
+    mkdir -p "${STACKSTORM_DIR}/opt/keys"
+    mkdir -p "${STACKSTORM_DIR}/opt/virtualenvs"
+    mkdir -p "${STACKSTORM_DIR}/opt/ssh"
 
-    # Copy StackStorm demo pack
-    if [ -d "${DEMO_REPO}/demo" ]; then
-        cp -r "${DEMO_REPO}/demo" "${STACKSTORM_DIR}/packs.dev/"
-    else
-        err "Missing /demo directory in demo repo"
-    fi
+    cp -r "${DEMO_REPO}/demo" "${STACKSTORM_DIR}/packs.dev/" || err "Missing /demo directory in demo repo"
 }
 
 #------------------------------------------------------------

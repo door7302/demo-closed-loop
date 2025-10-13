@@ -77,7 +77,6 @@ services:
   st2web:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2web:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     environment:
       ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
       ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
@@ -107,17 +106,15 @@ services:
   st2makesecrets:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     networks:
       - private
     volumes:
       - /opt/stackstorm/scripts/makesecrets.sh:/makesecrets.sh
-      - stackstorm-keys:/etc/st2/keys:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
     command: /makesecrets.sh
   st2api:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2api:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - mongo
       - rabbitmq
@@ -132,15 +129,14 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-keys:/etc/st2/keys:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:rw
-      - stackstorm-packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:ro
+      - /opt/stackstorm/config:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
       - /opt/stackstorm/files/rbac:/opt/stackstorm/rbac:rw
-      - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
   st2stream:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2stream:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - st2api
     networks:
@@ -151,7 +147,6 @@ services:
   st2scheduler:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2scheduler:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - redis
       - st2api
@@ -163,7 +158,6 @@ services:
   st2workflowengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2workflowengine:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - redis
       - st2api
@@ -172,11 +166,10 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-keys:/etc/st2/keys:ro
+      - /opt/stackstorm/keys:/etc/st2/keys:ro
   st2auth:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2auth:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - st2api
     networks:
@@ -188,7 +181,6 @@ services:
   st2actionrunner:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - redis
       - st2api
@@ -197,18 +189,17 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:rw
-      - stackstorm-packs:/opt/stackstorm/packs:rw
-      - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:rw
-      - stackstorm-virtualenvs:/opt/stackstorm/virtualenvs:rw
-      - stackstorm-ssh:/home/stanley/.ssh
+      - /opt/stackstorm/config:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
+      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:rw
+      - /opt/stackstorm/ssh:/home/stanley/.ssh
       # Action runner needs access to keys since action definitions (Jinja
       # templates) can reference secrets
-      - stackstorm-keys:/etc/st2/keys:ro
+      - /opt/stackstorm/keys:/etc/st2/keys:ro
   st2garbagecollector:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2garbagecollector:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - st2api
     networks:
@@ -219,7 +210,6 @@ services:
   st2notifier:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2notifier:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - redis
       - st2api
@@ -241,7 +231,6 @@ services:
   st2sensorcontainer:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2sensorcontainer:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - st2api
     networks:
@@ -249,14 +238,13 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-virtualenvs:/opt/stackstorm/virtualenvs:ro
-      - stackstorm-packs:/opt/stackstorm/packs:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:ro
-      - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:ro
+      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:ro
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:ro
+      - /opt/stackstorm/config:/opt/stackstorm/configs:ro
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:ro
   st2timersengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2timersengine:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - st2api
     networks:
@@ -266,7 +254,6 @@ services:
   st2client:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
-    user: root
     depends_on:
       - st2auth
       - st2api
@@ -287,17 +274,16 @@ services:
       # keys in prod setup, but here we make it available to end user for
       # testing and transparency reasons since this setup is primarily mean to
       # be used for testing and development.
-      - stackstorm-keys:/etc/st2/keys:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:rw
-      - stackstorm-packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:ro
+      - /opt/stackstorm/config:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
       - /opt/stackstorm/files/rbac:/opt/stackstorm/rbac:rw
-      - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
       - /opt/stackstorm/files/st2-cli.conf:/root/.st2/config
       - /opt/stackstorm/scripts/st2client-startup.sh:/st2client-startup.sh
   st2chatops:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2chatops:${ST2_VERSION:-latest}
     restart: on-failure:5
-    user: root
     depends_on:
       - st2api
       - st2auth
@@ -326,7 +312,6 @@ services:
   mongo:
     image: mongo:4.4
     restart: on-failure
-    user: root
     networks:
       - private
     volumes:
@@ -334,7 +319,6 @@ services:
   rabbitmq:
     image: rabbitmq:3.12
     restart: on-failure
-    user: root
     networks:
       - private
     volumes:
@@ -342,7 +326,6 @@ services:
   redis:
     image: redis:7.2
     restart: on-failure
-    user: root
     networks:
       - private
     volumes:
@@ -352,11 +335,6 @@ volumes:
     stackstorm-mongodb:
     stackstorm-rabbitmq:
     stackstorm-redis:
-    stackstorm-packs:
-    stackstorm-packs-configs:
-    stackstorm-keys:
-    stackstorm-virtualenvs:
-    stackstorm-ssh:
 
 networks:
   public:
