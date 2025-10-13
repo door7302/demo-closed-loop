@@ -343,7 +343,6 @@ Message example:
 "timestamp":1760358802
 }
 """
-message = json.loads(message)
 
 # Parse fields
 cmerror_clear = message.get('fields', {}).get('cmerror_clear', None)
