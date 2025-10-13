@@ -346,8 +346,10 @@ Message example:
 
 try:
     message_dict = json.loads(message)
+    LOG.info("LOGIC: Message parsed as JSON successfully")
 except json.JSONDecodeError:
     # fallback: maybe it's a Python dict string
+    LOG.warning("LOGIC: Message is not valid JSON, trying to parse as Python dict string")
     import ast
     message_dict = ast.literal_eval(message)
 
