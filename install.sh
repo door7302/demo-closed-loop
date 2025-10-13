@@ -83,11 +83,11 @@ prepare_folders() {
 
     # Copy StackStorm demo packs
     mkdir -p "${STACKSTORM_DIR}/packs.dev"
-    mkdir -p "${STACKSTORM_DIR}/opt/packs"
-    mkdir -p "${STACKSTORM_DIR}/opt/packs-configs"
-    mkdir -p "${STACKSTORM_DIR}/opt/keys"
-    mkdir -p "${STACKSTORM_DIR}/opt/virtualenvs"
-    mkdir -p "${STACKSTORM_DIR}/opt/ssh"
+    mkdir -p "${STACKSTORM_DIR}/packs"
+    mkdir -p "${STACKSTORM_DIR}/packs-configs"
+    mkdir -p "${STACKSTORM_DIR}/keys"
+    mkdir -p "${STACKSTORM_DIR}/virtualenvs"
+    mkdir -p "${STACKSTORM_DIR}/ssh"
 
     cp -r "${DEMO_REPO}/demo" "${STACKSTORM_DIR}/packs.dev/" || err "Missing /demo directory in demo repo"
 }
