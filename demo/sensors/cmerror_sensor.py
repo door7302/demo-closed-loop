@@ -18,9 +18,9 @@ class CmErrorKafkaSensor(PollingSensor):
         cfg = self._config.get('demo', {})
         
         if not cfg:
-            print ("No configuration found for demo pack in config attribute.")
+            LOG.error ("No configuration found for demo pack in config attribute.")
         else:
-            print ("Received config:", json.dumps(cfg, indent=4))
+            LOG.info ("Received config message:", json.dumps(cfg, indent=4))
             demo_cfg = cfg.get('message_sensor', {})
 
             self._bootstrap_servers = demo_cfg.get('bootstrap_servers', 'localhost:9092')
@@ -28,7 +28,7 @@ class CmErrorKafkaSensor(PollingSensor):
             self._group_id = demo_cfg.get('topics', [{}])[0].get('group_id', 'default_group')
             self._trigger = demo_cfg.get('topics', [{}])[0].get('trigger', 'default_trigger')
             
-            print(f"Kafka Sensor Config - Bootstrap Servers: {self._bootstrap_servers}, Topic: {self._topic}, Group ID: {self._group_id}, Trigger: {self._trigger}")
+            LOG.info(f"Kafka Sensor Config - Bootstrap Servers: {self._bootstrap_servers}, Topic: {self._topic}, Group ID: {self._group_id}, Trigger: {self._trigger}")
 
             LOG.info(f"Connecting to Kafka: {self._bootstrap_servers}, topic: {self._topic}")
             self._consumer = KafkaConsumer(
