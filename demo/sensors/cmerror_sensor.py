@@ -44,7 +44,9 @@ class CmErrorKafkaSensor(PollingSensor):
             try:
                 payload = {'message': json.loads(message.value)}
             except Exception:
+                LOG.info(f"Message is not valid JSON, sending raw string.")
                 payload = {'message': message.value}
+
 
             self.sensor_service.dispatch(trigger=self._trigger, payload=payload)
             break  # process one message per poll cycle
