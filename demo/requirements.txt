@@ -1,1 +1,4 @@
 kafka-python>=2.0.2
+pymongo>=4.15.3
+junos-eznc>=2.7.5
+influxdb>=5.3.2
