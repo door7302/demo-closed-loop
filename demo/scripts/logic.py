@@ -344,17 +344,24 @@ Message example:
 }
 """
 
+try:
+    message_dict = json.loads(message)
+except json.JSONDecodeError:
+    # fallback: maybe it's a Python dict string
+    import ast
+    message_dict = ast.literal_eval(message)
+
 # Parse fields
-cmerror_clear = message.get('fields', {}).get('cmerror_clear', None)
-cmerror_count = message.get('fields', {}).get('cmerror_count', None)
-cmerror_desc = message.get('fields', {}).get('cmerror_desc', None)
-cmerror_id = message.get('fields', {}).get('cmerror_id', None)
-cmerror_slot = message.get('fields', {}).get('cmerror_slot', None)
-cmerror_update = message.get('fields', {}).get('cmerror_update', None)
+cmerror_clear = message_dict.get('fields', {}).get('cmerror_clear', None)
+cmerror_count = message_dict.get('fields', {}).get('cmerror_count', None)
+cmerror_desc = message_dict.get('fields', {}).get('cmerror_desc', None)
+cmerror_id = message_dict.get('fields', {}).get('cmerror_id', None)
+cmerror_slot = message_dict.get('fields', {}).get('cmerror_slot', None)
+cmerror_update = message_dict.get('fields', {}).get('cmerror_update', None)
 # Parse tags
-cmerror_component = message.get('tags', {}).get('component', None)
-cmerror_device = message.get('tags', {}).get('device', None)
-cmerror_pfe = message.get('tags', {}).get('_subcomponent_id', None)
+cmerror_component = message_dict.get('tags', {}).get('component', None)
+cmerror_device = message_dict.get('tags', {}).get('device', None)
+cmerror_pfe = message_dict.get('tags', {}).get('_subcomponent_id', None)
     
 ##############################@ LOGIC #################################
 
