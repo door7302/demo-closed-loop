@@ -32,6 +32,12 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
+## Install Mongo DB py package 
+
+```shell
+pip install pymongo
+```
+
 ## Download packages and prepare environment 
 
 You may use the shell script `install.sh` to do all these tasks automatically or do it by yourself by following all steps below: 
