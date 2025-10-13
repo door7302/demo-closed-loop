@@ -7,6 +7,9 @@ kafka-topics.sh --list --bootstrap-server 10.83.153.137:9092
 Ch@ngeMe
 
 # 1. Register pack
+
+st2 run packs.load packs=git register=configs
+
 st2 pack register /opt/stackstorm/packs.dev/demo && \
 st2 run packs.setup_virtualenv packs=demo
 # 2. Recreate virtualenv and install requirements
@@ -67,3 +70,7 @@ docker compose exec st2client bash
 
 
 st2 pack register /opt/stackstorm/packs/demo
+
+st2 run packs.load packs=git register=configs
+
+st2ctl reload --register-all

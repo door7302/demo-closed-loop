@@ -15,7 +15,7 @@ class CmErrorKafkaSensor(PollingSensor):
         self._trigger = None
 
     def setup(self):
-        cfg = self._config.get('message_sensor', {})
+        cfg = self._config.get('demo', {})
         print ("Received config:", json.dumps(cfg, indent=4))
         self._bootstrap_servers = cfg.get('bootstrap_servers', 'localhost:9092')
         self._topic = cfg.get('topics', [{}])[0].get('name', 'cmerror')
