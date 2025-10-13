@@ -8,4 +8,4 @@ trigger:
 action:
   ref: "core.local"
   parameters:
-    cmd: "source /opt/stackstorm/packs.dev/demo/venv/bin/activate && python3 /opt/stackstorm/packs.dev/demo/scripts/logic.py '{{trigger.message}}'"
+    cmd: "source /opt/stackstorm/virtualenvs/demo/bin/activate && python3 /opt/stackstorm/packs/demo/scripts/logic.py '{{trigger.message}}'"
