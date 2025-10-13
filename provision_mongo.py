@@ -5,7 +5,7 @@ from pymongo import MongoClient
 # === CONFIG ===
 MONGO_URI = "mongodb://localhost:27017/"
 DB_NAME = "networkdb"
-DATA_FILE = "data.json"
+DATA_FILE = "sample_inventory.json"
 
 def init_db():
     # Connect to MongoDB
