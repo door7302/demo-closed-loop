@@ -2,7 +2,6 @@ name: "run_python_script"
 pack: "demo"
 runner_type: "python-script"
 entry_point: "scripts/logic.py"
-use_pack_virtualenv: true
 enabled: true
 description: "Run Python script with Kafka message"
 parameters:
