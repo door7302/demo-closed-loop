@@ -2,4 +2,4 @@
 import sys
 
 message = sys.argv[1]
-print(f"Received Kafka message: {message}")
+print(f"LOGIC PARSES THE KAFKA MESSAGE: {message}")

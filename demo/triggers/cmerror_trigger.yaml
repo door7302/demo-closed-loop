@@ -6,4 +6,4 @@ payload_schema:
   type: "object"
   properties:
     message:
-      type: "json"
+      type: "string"

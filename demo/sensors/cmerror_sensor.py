@@ -42,9 +42,10 @@ class CmErrorKafkaSensor(PollingSensor):
         for message in self._consumer:
             LOG.info(f"Received message on {self._topic}: {message.value}")
             try:
-                payload = {'message': json.loads(message.value)}
+                payload = json.dumps({'message': json.loads(message.value)}, indent=2)
             except Exception:
-                payload = {'message': message.value}
+                payload = json.dumps({'message': message.value}, intend=2)
+            LOG.info(f"Dispatching trigger {self._trigger} with payload: {payload}")
 
             self.sensor_service.dispatch(trigger=self._trigger, payload=payload)
             break  # process one message per poll cycle
