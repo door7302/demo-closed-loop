@@ -16,19 +16,27 @@ class CmErrorKafkaSensor(PollingSensor):
 
     def setup(self):
         cfg = self._config.get('demo', {})
-        print ("Received config:", json.dumps(cfg, indent=4))
-        self._bootstrap_servers = cfg.get('bootstrap_servers', 'localhost:9092')
-        self._topic = cfg.get('topics', [{}])[0].get('name', 'cmerror')
-        self._group_id = cfg.get('topics', [{}])[0].get('group_id', 'st2_cmerror')
-        self._trigger = cfg.get('topics', [{}])[0].get('trigger', 'demo.cmerror_trigger')
+        
+        if not cfg:
+            print ("No configuration found for demo pack in config attribute.")
+        else:
+            print ("Received config:", json.dumps(cfg, indent=4))
+            demo_cfg = cfg.get('message_sensor', {})
 
-        LOG.info(f"Connecting to Kafka: {self._bootstrap_servers}, topic: {self._topic}")
-        self._consumer = KafkaConsumer(
-            self._topic,
-            bootstrap_servers=self._bootstrap_servers,
-            group_id=self._group_id,
-            value_deserializer=lambda m: m.decode('utf-8')
-        )
+            self._bootstrap_servers = demo_cfg.get('bootstrap_servers', 'localhost:9092')
+            self._topic = demo_cfg.get('topics', [{}])[0].get('name', 'default_topic')
+            self._group_id = demo_cfg.get('topics', [{}])[0].get('group_id', 'default_group')
+            self._trigger = demo_cfg.get('topics', [{}])[0].get('trigger', 'default_trigger')
+            
+            print(f"Kafka Sensor Config - Bootstrap Servers: {self._bootstrap_servers}, Topic: {self._topic}, Group ID: {self._group_id}, Trigger: {self._trigger}")
+
+            LOG.info(f"Connecting to Kafka: {self._bootstrap_servers}, topic: {self._topic}")
+            self._consumer = KafkaConsumer(
+                self._topic,
+                bootstrap_servers=self._bootstrap_servers,
+                group_id=self._group_id,
+                value_deserializer=lambda m: m.decode('utf-8')
+            )
 
     def poll(self):
         for message in self._consumer:
