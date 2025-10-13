@@ -92,10 +92,10 @@ services:
       timeout: 1s
       retries: 1
     volumes:
-      - /opt/stackstormscripts/st2web-healthcheck.sh:/st2web-healthcheck.sh
-      # If you want to use a custom st2web config, edit /opt/stackstormfiles/config.js accordingly and
+      - /opt/stackstorm/scripts/st2web-healthcheck.sh:/st2web-healthcheck.sh
+      # If you want to use a custom st2web config, edit /opt/stackstorm/files/config.js accordingly and
       # uncomment the line below
-      #- /opt/stackstormfiles/config.js:/opt/stackstorm/static/webui/config.js:ro
+      #- /opt/stackstorm/files/config.js:/opt/stackstorm/static/webui/config.js:rw
     ports:
       - "${ST2_EXPOSE_HTTP:-127.0.0.1:80}:80"
       # - "${ST2_EXPOSE_HTTPS:-127.0.0.1:443}:443"
@@ -109,8 +109,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormscripts/makesecrets.sh:/makesecrets.sh
-      - stackstorm-keys:/etc/st2/keys:rw
+      - /opt/stackstorm/scripts/makesecrets.sh:/makesecrets.sh
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
     command: /makesecrets.sh
   st2api:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2api:${ST2_VERSION:-latest}
@@ -127,13 +127,13 @@ services:
       ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
       ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-keys:/etc/st2/keys:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:rw
-      - stackstorm-packs:/opt/stackstorm/packs:rw
-      - /opt/stackstormfiles/rbac:/opt/stackstorm/rbac:rw
-      - ${ST2_PACKS_DEV:-/opt/stackstormpacks.dev}:/opt/stackstorm/packs.dev:rw
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/files/rbac:/opt/stackstorm/rbac:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
   st2stream:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2stream:${ST2_VERSION:-latest}
     restart: on-failure
@@ -142,8 +142,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2scheduler:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2scheduler:${ST2_VERSION:-latest}
     restart: on-failure
@@ -153,8 +153,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2workflowengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2workflowengine:${ST2_VERSION:-latest}
     restart: on-failure
@@ -164,9 +164,9 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-keys:/etc/st2/keys:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
   st2auth:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2auth:${ST2_VERSION:-latest}
     restart: on-failure
@@ -175,9 +175,9 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - /opt/stackstormfiles/htpasswd:/etc/st2/htpasswd:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/files/htpasswd:/etc/st2/htpasswd:rw
   st2actionrunner:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
@@ -187,16 +187,16 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:rw
-      - stackstorm-packs:/opt/stackstorm/packs:rw
-      - ${ST2_PACKS_DEV:-/opt/stackstormpacks.dev}:/opt/stackstorm/packs.dev:rw
-      - stackstorm-virtualenvs:/opt/stackstorm/virtualenvs:rw
-      - stackstorm-ssh:/home/stanley/.ssh
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
+      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:rw
+      - /opt/stackstorm/ssh:/home/stanley/.ssh
       # Action runner needs access to keys since action definitions (Jinja
       # templates) can reference secrets
-      - stackstorm-keys:/etc/st2/keys:ro
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
   st2garbagecollector:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2garbagecollector:${ST2_VERSION:-latest}
     restart: on-failure
@@ -205,8 +205,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2notifier:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2notifier:${ST2_VERSION:-latest}
     restart: on-failure
@@ -216,8 +216,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2rulesengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2rulesengine:${ST2_VERSION:-latest}
     restart: on-failure
@@ -226,8 +226,8 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
   st2sensorcontainer:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2sensorcontainer:${ST2_VERSION:-latest}
     restart: on-failure
@@ -236,12 +236,12 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
-      - stackstorm-virtualenvs:/opt/stackstorm/virtualenvs:ro
-      - stackstorm-packs:/opt/stackstorm/packs:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:ro
-      - ${ST2_PACKS_DEV:-/opt/stackstormpacks.dev}:/opt/stackstorm/packs.dev:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
+      - /opt/stackstorm/virtualenvs:/opt/stackstorm/virtualenvs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
   st2timersengine:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2timersengine:${ST2_VERSION:-latest}
     restart: on-failure
@@ -250,7 +250,7 @@ services:
     networks:
       - private
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
   st2client:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2actionrunner:${ST2_VERSION:-latest}
     restart: on-failure
@@ -268,19 +268,19 @@ services:
       ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
       TZ: ${TZ:-UTC}
     volumes:
-      - /opt/stackstormfiles/st2.docker.conf:/etc/st2/st2.docker.conf:ro
-      - /opt/stackstormfiles/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:rw
+      - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:rw
       # Technically, client container doesn't need or should have access to the
       # keys in prod setup, but here we make it available to end user for
       # testing and transparency reasons since this setup is primarily mean to
       # be used for testing and development.
-      - stackstorm-keys:/etc/st2/keys:ro
-      - stackstorm-packs-configs:/opt/stackstorm/configs:rw
-      - stackstorm-packs:/opt/stackstorm/packs:rw
-      - /opt/stackstormfiles/rbac:/opt/stackstorm/rbac:rw
-      - ${ST2_PACKS_DEV:-/opt/stackstormpacks.dev}:/opt/stackstorm/packs.dev:rw
-      - /opt/stackstormfiles/st2-cli.conf:/root/.st2/config
-      - /opt/stackstormscripts/st2client-startup.sh:/st2client-startup.sh
+      - /opt/stackstorm/keys:/etc/st2/keys:rw
+      - /opt/stackstorm/configs:/opt/stackstorm/configs:rw
+      - /opt/stackstorm/packs:/opt/stackstorm/packs:rw
+      - /opt/stackstorm/files/rbac:/opt/stackstorm/rbac:rw
+      - /opt/stackstorm/packs.dev:/opt/stackstorm/packs.dev:rw
+      - /opt/stackstorm/files/st2-cli.conf:/root/.st2/config
+      - /opt/stackstorm/scripts/st2client-startup.sh:/st2client-startup.sh
   st2chatops:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2chatops:${ST2_VERSION:-latest}
     restart: on-failure:5
@@ -307,7 +307,7 @@ services:
       HUBOT_LOG_LEVEL: ${HUBOT_LOG_LEVEL:-debug}
       HUBOT_SLACK_TOKEN: ${HUBOT_SLACK_TOKEN:-}
     volumes:
-      - /opt/stackstormscripts/st2chatops-startup.sh:/st2chatops-startup.sh
+      - /opt/stackstorm/scripts/st2chatops-startup.sh:/st2chatops-startup.sh
   # external services
   mongo:
     image: mongo:4.4
@@ -335,11 +335,6 @@ volumes:
     stackstorm-mongodb:
     stackstorm-rabbitmq:
     stackstorm-redis:
-    stackstorm-packs:
-    stackstorm-packs-configs:
-    stackstorm-keys:
-    stackstorm-virtualenvs:
-    stackstorm-ssh:
 
 networks:
   public:
