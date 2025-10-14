@@ -23,6 +23,7 @@ log_file = os.path.join(log_dir, "demo_logic.log")
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 
+
 # File handler only
 file_handler = logging.FileHandler(log_file)
 file_formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
@@ -336,64 +337,6 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
 
     return err
 
-def mark_cmerror_as_handled(db, cmerror_device, cmerror_id):
-    """
-    Marks a cmerror as handled in MongoDB.
-
-    Args:
-        db: MongoDB database object.
-        cmerror_device (str): Router name.
-        cmerror_id (str): CM error ID.
-
-    Returns:
-        None
-    """
-    try:
-        result = db.cmerrors.update_one(
-            {"router_name": cmerror_device, "cmerror_id": cmerror_id},
-            {"$set": {"handled": True}}  
-        )
-
-        if result.matched_count:
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} marked as handled")
-        else:
-            LOG.warning(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} not found, cannot mark handled")
-
-    except Exception as e:
-        LOG.error(f"LOGIC: Unable to update 'handled' field in MongoDB: {e}")
-        raise SystemExit(1)
-
-def disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces):
-    """
-    Disables specified interfaces and notifies NOC team.
-
-    Args:
-        db: MongoDB database object.
-        cmerror_device (str): Router name.
-        cmerror_slot (int|str): FPC slot number.
-        cmerror_pfe (int|str): PFE slot number.
-        cmerror_id (str): CM error ID.
-        cmerror_desc (str): CM error description.
-        interfaces (list): List of interfaces to disable.
-
-    Returns:
-        None
-    """
-    LOG.info(f"LOGIC: INTERFACES TO DISABLE on {cmerror_device}: {interfaces}")
-    
-    err = configure_interfaces_disable_state(cmerror_device, interfaces, action="disable")
-    if err:
-        LOG.error(f"LOGIC: Unable to disable interfaces on {cmerror_device}: {err}")
-        raise SystemExit(1) 
-    
-    LOG.info(f"LOGIC: INTERFACES DISABLED on {cmerror_device}")
-    write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} and pfe {cmerror_pfe}", host="influxdb", port=8086, db="demo")
-
-    # Notify NOC team
-    LOG.info(f"LOGIC: NOTIFY NOC TEAM - PARTIAL ACTION TAKEN - INTERFACES DISABLED: {interfaces}")
-    write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
-
-    mark_cmerror_as_handled(db, cmerror_device, cmerror_id)
 
 ##############################@ MAIN #############################################
 # Main script logic
@@ -627,7 +570,34 @@ if action_required == 1:
         LOG.error(f"LOGIC: Unable to get interfaces from {cmerror_device}: {err}")
         raise SystemExit(1) 
 
-    disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
+    LOG.info(f"LOGIC: INTERFACES TO DISABLE on {cmerror_device}: {interfaces_fpc_pfe}")
+    
+    err = configure_interfaces_disable_state(cmerror_device, interfaces_fpc_pfe, action="disable")
+    if err:
+        LOG.error(f"LOGIC: Unable to disable interfaces on {cmerror_device}: {err}")
+        raise SystemExit(1) 
+    
+    LOG.info(f"LOGIC: INTERFACES DISABLED on {cmerror_device}")
+    write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} and pfe {cmerror_pfe}", host="influxdb", port=8086, db="demo")
+
+    # Notify NOC team
+    LOG.info(f"LOGIC: NOTIFY NOC TEAM - PARTIAL ACTION TAKEN - INTERFACES DISABLED: {interfaces_fpc_pfe}")
+    write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
+
+    try:
+        result = db.cmerrors.update_one(
+            {"router_name": cmerror_device, "cmerror_id": cmerror_id},
+            {"$set": {"handled": True}}  
+        )
+
+        if result.matched_count:
+            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} marked as handled")
+        else:
+            LOG.warning(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} not found, cannot mark handled")
+
+    except Exception as e:
+        LOG.error(f"LOGIC: Unable to update 'handled' field in MongoDB: {e}")
+        raise SystemExit(1)
 
 if action_required == 2:
     LOG.info(f"LOGIC: INTERFACES TO DISABLE on {cmerror_device}: {interfaces_fpc}")
@@ -669,7 +639,32 @@ if action_required == 2:
         write_log_to_influx(cmerror_device, f"After rebooting FPC {cmerror_slot} on device {cmerror_device}, major alarm still exists: {alarm_desc}", host="influxdb", port=8086, db="demo")
 
         # Shutdown interfaces again for the FPC slot and PFE slot only and contact NOC team
-        disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
+        LOG.info(f"LOGIC: INTERFACES TO DISABLE on {cmerror_device}: {interfaces_fpc_pfe}")
+        err = configure_interfaces_disable_state(cmerror_device, interfaces_fpc_pfe, action="disable")
+        if err:
+            LOG.error(f"LOGIC: Unable to disable interfaces on {cmerror_device}: {err}")
+            raise SystemExit(1) 
+        LOG.info(f"LOGIC: INTERFACES DISABLED on {cmerror_device}")
+        write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} and pfe {cmerror_pfe} again due to persistent major alarm", host="influxdb", port=8086, db="demo")
+        
+        # Notify NOC team
+        LOG.info(f"LOGIC: NOTIFY NOC TEAM - PARTIAL ACTION TAKEN - INTERFACES DISABLED: {interfaces_fpc_pfe}")
+        write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
+        
+        try:
+            result = db.cmerrors.update_one(
+                {"router_name": cmerror_device, "cmerror_id": cmerror_id},
+                {"$set": {"handled": True}}  
+            )
+
+            if result.matched_count:
+                LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} marked as handled")
+            else:
+                LOG.warning(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} not found, cannot mark handled")
+
+        except Exception as e:
+            LOG.error(f"LOGIC: Unable to update 'handled' field in MongoDB: {e}")
+            raise SystemExit(1)
         
     else:
         LOG.info(f"LOGIC: MAJOR FPC ALARM CLEARED on {cmerror_device}")
@@ -678,4 +673,17 @@ if action_required == 2:
         LOG.info(f"LOGIC: NOTIFY NOC TEAM - FULL ACTION SUCCESSFUL - INTERFACES RE-ENABLED: {interfaces_fpc}")
         write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} is back online and major alarm cleared, interfaces re-enabled", host="influxdb", port=8086, db="demo")
 
-        mark_cmerror_as_handled(db, cmerror_device, cmerror_id)
+        try:
+            result = db.cmerrors.update_one(
+                {"router_name": cmerror_device, "cmerror_id": cmerror_id},
+                {"$set": {"handled": True}}  
+            )
+
+            if result.matched_count:
+                LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} marked as handled")
+            else:
+                LOG.warning(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} not found, cannot mark handled")
+
+        except Exception as e:
+            LOG.error(f"LOGIC: Unable to update 'handled' field in MongoDB: {e}")
+            raise SystemExit(1)
