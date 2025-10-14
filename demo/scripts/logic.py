@@ -630,15 +630,14 @@ if action_required == 1:
     disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
 
 if action_required == 2:
-    LOG.info(f"LOGIC: INTERFACES TO DISABLE on {cmerror_device}: {interfaces_fpc}")
-   
-    err = configure_interfaces_disable_state(cmerror_device, interfaces_fpc, action="disable")
+   # Shut down ports attached to the affected FPC 
+    interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
     if err:
-        LOG.error(f"LOGIC: Unable to disable interfaces on {cmerror_device}: {err}")
+        LOG.error(f"LOGIC: Unable to get interfaces from {cmerror_device}: {err}")
         raise SystemExit(1) 
-    LOG.info(f"LOGIC: INTERFACES DISABLED on {cmerror_device}")
-    write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} due to cmerror", host="influxdb", port=8086, db="demo") 
-    
+
+    disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc)
+
     # Then reboot the Linecard
     write_log_to_influx(cmerror_device, f"Rebooting FPC {cmerror_slot} on device {cmerror_device}", host="influxdb", port=8086, db="demo")
     err = reboot_fpc_and_wait(cmerror_device, cmerror_slot)
@@ -651,6 +650,7 @@ if action_required == 2:
 
     # wait 10 seconds before re-enabling interfaces
     time.sleep(10)
+    
     err = configure_interfaces_disable_state(cmerror_device, interfaces_fpc, action="enable")
     if err:
         LOG.error(f"LOGIC: Unable to enable interfaces on {cmerror_device}: {err}")
