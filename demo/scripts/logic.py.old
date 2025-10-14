@@ -26,7 +26,7 @@ LOG.setLevel(logging.INFO)
 
 # File handler only
 file_handler = logging.FileHandler(log_file)
-file_formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
+file_formatter = logging.Formatter('%(asctime)s %(levelname)s  %(message)s')
 file_handler.setFormatter(file_formatter)
 
 # Avoid duplicate handlers if reloaded
@@ -245,37 +245,30 @@ def reboot_fpc_and_wait(router_name, fpc_slot):
         timeout = 10 * 60   # 10 minutes
         interval = 10       # 10 seconds between checks
         waited = 0
-
         while waited < timeout:
             try:
                 rsp = dev.rpc.get_fpc_information(slot=str(fpc_slot))
+                fpc = rsp.find('.//fpc', namespaces=rsp.nsmap)
+                if not fpc:
+                    LOG.info(f"LOGIC: [{waited}s] No FPC info yet...")
+                else:
+                    state = (fpc.findtext('state') or 'Unknown').strip()
+                    heap = int(fpc.findtext('memory-heap-utilization') or 0)
+                    LOG.info(f"[{waited:>3}s] state={state}, heap={heap}%")
+
+                    if state.lower() == "online" and heap > 0:
+                        LOG.info(f"LOGIC: FPC {fpc_slot} is Online with heap {heap}%.")
+                        break
+
             except RpcError:
-                # FPC may be unreachable during reboot
                 LOG.info(f"LOGIC: [{waited}s] FPC {fpc_slot} not responding yet...")
-                time.sleep(interval)
-                waited += interval
-                continue
-
-            fpc = rsp.find('.//fpc', namespaces=rsp.nsmap)
-            if fpc is None:
-                LOG.info(f"LOGIC: [{waited}s] No FPC info yet...")
-            else:
-                state = fpc.findtext('state', default='Unknown').strip()
-                heap_str = fpc.findtext('memory-heap-utilization', default='0').strip()
-
-                try:
-                    heap = int(heap_str)
-                except ValueError:
-                    heap = 0
-
-                print(f"[{waited:>3}s] state={state}, heap={heap}%")
-
-                if state.lower() == "online" and heap > 0:
-                    LOG.info(f"LOGIC: FPC {fpc_slot} is Online with heap {heap}%.")
-                    break
+            except Exception as e:
+                LOG.warning(f"LOGIC: Unexpected error while checking FPC {fpc_slot}: {e}")
 
             time.sleep(interval)
             waited += interval
+        else:
+            LOG.warning(f"LOGIC: Timeout waiting for FPC {fpc_slot} to come Online.")
 
         if waited >= timeout:
             err = f"Timeout: FPC {fpc_slot} did not come online within 10 minutes."
@@ -343,6 +336,7 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
 ##################################################################################
 
 # Get param from command line argument
+LOG.info(f"LOGIC: --------------------------------------------------------------------------------------------------------------------------")
 try:
     param = sys.argv[1]
     LOG.info(f"LOGIC: PARSES THE KAFKA MESSAGE: {param}")

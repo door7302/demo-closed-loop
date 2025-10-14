@@ -9,3 +9,4 @@ action:
   ref: "core.local"
   parameters:
     cmd: "source /opt/stackstorm/virtualenvs/demo/bin/activate && python3 /opt/stackstorm/packs/demo/scripts/logic.py '{{trigger.message}}'"
+    timeout: 900 
