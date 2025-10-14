@@ -13,6 +13,11 @@ from jnpr.junos.exception import ConnectError, RpcError, ConfigLoadError, Commit
 
 # Set up logging
 LOG = logging.getLogger(__name__)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
+handler.setFormatter(formatter)
+LOG.addHandler(handler)
+LOG.setLevel(logging.INFO)
 
 # Set MongoDB connection parameters
 MONGO_URI = "mongodb://mongo:27017/"
