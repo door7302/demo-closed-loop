@@ -23,6 +23,7 @@ log_file = os.path.join(log_dir, "demo_logic.log")
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 
+
 # File handler only
 file_handler = logging.FileHandler(log_file)
 file_formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
@@ -524,6 +525,9 @@ exesting_major_alarms = False
 other_router = None
 
 for router_name in pop_routers if pop_routers else []:
+    # Skip the router where the cmerror was raised
+    if router_name == cmerror_device:
+        continue
     alarm_desc, err = check_fpc_major_alarm(router_name)
     if err:
         LOG.error(f"LOGIC: Unable to connect to {router_name}: {err}")
