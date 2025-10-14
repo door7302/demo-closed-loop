@@ -42,10 +42,11 @@ class CmErrorKafkaSensor(PollingSensor):
         for message in self._consumer:
             LOG.info(f"Received message on {self._topic}: {message.value}")
             try:
-                payload = json.dumps({'message': json.loads(message.value)})
+                # Parse JSON from Kafka, then re-serialize it to string for the trigger
+                payload = {'message': json.dumps(json.loads(message.value))}
             except Exception:
-                LOG.error(f"Message is not valid JSON, sending raw string.")
-                break
+                LOG.warning("Message is not valid JSON, sending raw string.")
+                payload = {'message': str(message.value)}
 
             self.sensor_service.dispatch(trigger=self._trigger, payload=payload)
             break  # process one message per poll cycle

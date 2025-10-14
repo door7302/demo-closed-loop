@@ -11,10 +11,16 @@ from jnpr.junos import Device
 from jnpr.junos.utils.config import Config
 from jnpr.junos.exception import ConnectError, RpcError, ConfigLoadError, CommitError
 
-
+# Set up logging
 LOG = logging.getLogger(__name__)
+
+# Set MongoDB connection parameters
 MONGO_URI = "mongodb://mongo:27017/"
 DB_NAME = "networkdb"
+
+######################################@ FUNCTIONS ################################
+# Function definitions
+##################################################################################
 
 def check_fpc_major_alarm(router_name, fpc_slot=None):
     """
@@ -312,13 +318,30 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
 
     return err
 
+
+##############################@ MAIN #############################################
+# Main script logic
+##################################################################################
+
+# Get param from command line argument
 try:
-    message = sys.argv[1]
-    LOG.info(f"LOGIC: PARSES THE KAFKA MESSAGE: {message}")
+    param = sys.argv[1]
+    LOG.info(f"LOGIC: PARSES THE KAFKA MESSAGE: {param}")
 except IndexError:
-    LOG.error("LOGIC: No message provided")
+    LOG.error("LOGIC: No parameter provided")
     raise SystemExit(1) 
 
+# Parse message, which can be JSON or a Python dict string
+try:
+    message_dict = json.loads(param["message"])
+    LOG.info("LOGIC: Message parsed as JSON successfully")
+except json.JSONDecodeError:
+    # fallback: maybe it's a Python dict string
+    LOG.warning("LOGIC: Message is not valid JSON, trying to parse as Python dict string")
+    import ast
+    message_dict = ast.literal_eval(param["message"])
+
+# Sample message structure
 """
 Message example:
 {
@@ -343,15 +366,6 @@ Message example:
 "timestamp":1760358802
 }
 """
-
-try:
-    message_dict = json.loads(message)
-    LOG.info("LOGIC: Message parsed as JSON successfully")
-except json.JSONDecodeError:
-    # fallback: maybe it's a Python dict string
-    LOG.warning("LOGIC: Message is not valid JSON, trying to parse as Python dict string")
-    import ast
-    message_dict = ast.literal_eval(message)
 
 # Parse fields
 cmerror_clear = message_dict.get('fields', {}).get('cmerror_clear', None)
