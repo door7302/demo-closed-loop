@@ -333,13 +333,13 @@ except IndexError:
 
 # Parse message, which can be JSON or a Python dict string
 try:
-    message_dict = json.loads(param["message"])
+    message_dict = json.loads(param)
     LOG.info("LOGIC: Message parsed as JSON successfully")
 except json.JSONDecodeError:
     # fallback: maybe it's a Python dict string
     LOG.warning("LOGIC: Message is not valid JSON, trying to parse as Python dict string")
     import ast
-    message_dict = ast.literal_eval(param["message"])
+    message_dict = ast.literal_eval(param)
 
 # Sample message structure
 """
