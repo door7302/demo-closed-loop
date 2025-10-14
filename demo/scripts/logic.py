@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 import json
 import logging
 import re
@@ -12,12 +13,24 @@ from jnpr.junos.utils.config import Config
 from jnpr.junos.exception import ConnectError, RpcError, ConfigLoadError, CommitError
 
 # Set up logging
+# Create logs directory if it doesn't exist
+log_dir = "/opt/stackstorm/logs"
+os.makedirs(log_dir, exist_ok=True)
+
+log_file = os.path.join(log_dir, "demo_logic.log")
+
+# Initialize logger
 LOG = logging.getLogger(__name__)
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
-handler.setFormatter(formatter)
-LOG.addHandler(handler)
 LOG.setLevel(logging.INFO)
+
+# File handler only
+file_handler = logging.FileHandler(log_file)
+file_formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
+file_handler.setFormatter(file_formatter)
+
+# Avoid duplicate handlers if reloaded
+if not LOG.handlers:
+    LOG.addHandler(file_handler)
 
 # Set MongoDB connection parameters
 MONGO_URI = "mongodb://mongo:27017/"

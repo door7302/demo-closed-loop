@@ -189,6 +189,7 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/logs:/opt/stackstorm/logs:rw
       - stackstorm-packs-configs:/opt/stackstorm/configs:rw
       - stackstorm-packs:/opt/stackstorm/packs:rw
       - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:rw
@@ -228,6 +229,7 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/logs:/opt/stackstorm/logs:rw
   st2sensorcontainer:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2sensorcontainer:${ST2_VERSION:-latest}
     restart: on-failure
@@ -238,6 +240,7 @@ services:
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
+      - /opt/stackstorm/logs:/opt/stackstorm/logs:rw
       - stackstorm-virtualenvs:/opt/stackstorm/virtualenvs:ro
       - stackstorm-packs:/opt/stackstorm/packs:ro
       - stackstorm-packs-configs:/opt/stackstorm/configs:ro
@@ -278,6 +281,7 @@ services:
       - stackstorm-packs-configs:/opt/stackstorm/configs:rw
       - stackstorm-packs:/opt/stackstorm/packs:rw
       - /opt/stackstorm/files/rbac:/opt/stackstorm/rbac:rw
+      - /opt/stackstorm/logs:/opt/stackstorm/logs:rw
       - ${ST2_PACKS_DEV:-/opt/stackstorm/packs.dev}:/opt/stackstorm/packs.dev:rw
       - /opt/stackstorm/files/st2-cli.conf:/root/.st2/config
       - /opt/stackstorm/scripts/st2client-startup.sh:/st2client-startup.sh
