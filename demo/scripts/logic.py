@@ -150,7 +150,7 @@ def get_interfaces_by_slot(router_name, fpc_slot, pfe_slot):
             if pattern_fpc_pfe.match(name):
                 interfaces_fpc_pfe.append(name)
             elif pattern_fpc_only.match(name):
-                interfaces_fpc_only.append(name)ƒ◊
+                interfaces_fpc_only.append(name)
 
     except (ConnectError, RpcError, Exception) as e:
         err = str(e)
