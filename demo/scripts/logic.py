@@ -7,6 +7,7 @@ import re
 import time
 from datetime import datetime, timezone
 from influxdb import InfluxDBClient
+from lxml import etree
 from pymongo import MongoClient
 from jnpr.junos import Device
 from jnpr.junos.utils.config import Config
@@ -149,7 +150,7 @@ def get_interfaces_by_slot(router_name, fpc_slot, pfe_slot):
             if pattern_fpc_pfe.match(name):
                 interfaces_fpc_pfe.append(name)
             elif pattern_fpc_only.match(name):
-                interfaces_fpc_only.append(name)
+                interfaces_fpc_only.append(name)ƒ◊
 
     except (ConnectError, RpcError, Exception) as e:
         err = str(e)
@@ -237,6 +238,14 @@ def reboot_fpc_and_wait(router_name, fpc_slot):
 
         LOG.info(f"LOGIC: Triggering reboot of FPC {fpc_slot} on {router_name}...")
         dev.rpc.request_chassis_fpc_restart(slot=str(fpc_slot))
+
+        # Build custom RPC manually
+        rpc = etree.Element("request-chassis-fpc")
+        etree.SubElement(rpc, "slot").text = str(fpc_slot)
+        etree.SubElement(rpc, "restart")
+
+        # Send the RPC
+        dev.rpc(rpc)
 
         LOG.info("LOGIC: Reboot command sent. Waiting 30 seconds before monitoring...")
         time.sleep(30)
@@ -650,7 +659,7 @@ if action_required == 2:
 
     # wait 10 seconds before re-enabling interfaces
     time.sleep(10)
-    
+
     err = configure_interfaces_disable_state(cmerror_device, interfaces_fpc, action="enable")
     if err:
         LOG.error(f"LOGIC: Unable to enable interfaces on {cmerror_device}: {err}")
