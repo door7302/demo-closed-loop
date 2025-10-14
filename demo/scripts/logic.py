@@ -237,8 +237,6 @@ def reboot_fpc_and_wait(router_name, fpc_slot):
         dev.open()
 
         LOG.info(f"LOGIC: Triggering reboot of FPC {fpc_slot} on {router_name}...")
-        dev.rpc.request_chassis_fpc_restart(slot=str(fpc_slot))
-
         # Build custom RPC manually
         rpc = etree.Element("request-chassis-fpc")
         etree.SubElement(rpc, "slot").text = str(fpc_slot)
