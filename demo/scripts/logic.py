@@ -314,6 +314,8 @@ def reboot_fpc_and_wait(router_name, fpc_slot):
 
     except (ConnectError, RpcError, Exception) as e:
         err = f"Error during FPC reboot: {e}"
+    except Exception as e:
+        LOG.info(f"LOGIC: FPC {fpc_slot} unexpected error {e}.")
 
     finally:
         if dev and dev.connected:
