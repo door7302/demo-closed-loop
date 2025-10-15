@@ -297,7 +297,7 @@ def reboot_fpc_and_wait(router_name, fpc_slot):
                 except ValueError:
                     heap = 0
 
-                print(f"[{waited:>3}s] state={state}, heap={heap}%")
+
 
                 if state.lower() == "online" and heap > 0:
                     LOG.info(f"LOGIC: FPC {fpc_slot} is Online with heap {heap}%.")
@@ -420,7 +420,14 @@ def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, ha
         str: "created", "updated", "marked", or "not_found"
     """
     try:
-        # Ensure compound unique index
+        # --- Drop old single-field unique index if it exists ---
+        indexes = db.cmerrors.index_information()
+        for name, info in indexes.items():
+            if info.get("key") == [("router_name", 1)]:
+                LOG.warning(f"Dropping obsolete index: {name}")
+                db.cmerrors.drop_index(name)
+
+        # --- Ensure compound unique index (router_name, cmerror_id) ---
         db.cmerrors.create_index(
             [("router_name", 1), ("cmerror_id", 1)],
             unique=True,
