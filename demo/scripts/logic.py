@@ -552,7 +552,7 @@ try:
     alarms = list(db.cmerrors.find({"router_name": cmerror_device}))
     if alarms:
         for alarm in alarms:
-            if not alarm.get("handled"):
+            if alarm.get("handled") == False:
                 LOG.info(f"LOGIC: Existing unhandled CMERROR: {alarm}")
                 LOG.info(f"LOGIC: Since there is already an unhandled CMERROR for {cmerror_device}, NO ACTION REQUIRED")
                 LOG.info("")
