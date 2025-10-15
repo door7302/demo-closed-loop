@@ -254,7 +254,7 @@ def reboot_fpc_and_wait(router_name, fpc_slot):
 
         while waited < timeout:
             try:
-                rsp = dev.rpc.get_fpc_information(slot=str(fpc_slot))
+                rsp = dev.rpc.get_fpc_information(fpc_slot=str(fpc_slot))
             except RpcError:
                 # FPC may be unreachable during reboot
                 LOG.info(f"LOGIC: [{waited}s] FPC {fpc_slot} not responding yet...")
@@ -409,9 +409,11 @@ def disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_
 # Get param from command line argument
 try:
     param = sys.argv[1]
+    LOG.info("LOGIC: ----------------------------------------------------------------------------------- : LOGIC")
     LOG.info(f"LOGIC: PARSES THE KAFKA MESSAGE: {param}")
 except IndexError:
     LOG.error("LOGIC: No parameter provided")
+    LOG.info("")
     raise SystemExit(1) 
 
 # Parse message, which can be JSON or a Python dict string
@@ -467,6 +469,7 @@ cmerror_pfe = message_dict.get('tags', {}).get('_subcomponent_id', None)
 # Step 1: check if cmerror_clear is 0 or 1
 if cmerror_clear == 1:
     LOG.info(f"LOGIC: CMERROR CLEARED for {cmerror_device} - {cmerror_desc} - NO ACTION REQUIRED")
+    LOG.info("")
     sys.exit(0)
 
 # Step 2: check some data from MongoDB
@@ -477,6 +480,7 @@ try:
     router = db.routers.find_one({"router_name": cmerror_device}, {"_id": 0})
     if not router:
         LOG.error(f"LOGIC: Router {cmerror_device} not found in MongoDB")
+        LOG.info("")
         raise SystemExit(1)
     
     # --- 2️⃣ Get POP info ---
@@ -517,6 +521,7 @@ if cm_error and cm_error.get("handled"):
     # if same timestamp, ignore
     if cmerror_update == cm_error.get("cmerror_update"):
         LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)")
+        LOG.info("")
         sys.exit(0)
 
     # Check if cmerror_count is increased
@@ -557,9 +562,11 @@ if cm_error and cm_error.get("handled"):
 
         except Exception as e:
             LOG.error(f"LOGIC: Unable to update/create cmerror in MongoDB: {e}")
+            LOG.info("")
             raise SystemExit(1)
     else:
         LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO COUNT INCREASE")
+        LOG.info("")
         sys.exit(0)
 else:
     action_required = 2 # full action required
@@ -590,6 +597,7 @@ else:
 
     except Exception as e:
         LOG.error(f"LOGIC: Unable to update cmerror in MongoDB: {e}")
+        LOG.info("")
         raise SystemExit(1)
 
 # Step 4: For each router from the same POP, connect to the router and check if Major alarms exist for any FPC 
@@ -632,6 +640,7 @@ if action_required == 1:
     interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
     if err:
         LOG.error(f"LOGIC: Unable to get interfaces from {cmerror_device}: {err}")
+        LOG.info("")
         raise SystemExit(1) 
 
     disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
@@ -641,6 +650,7 @@ if action_required == 2:
     interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
     if err:
         LOG.error(f"LOGIC: Unable to get interfaces from {cmerror_device}: {err}")
+        LOG.info("")
         raise SystemExit(1) 
 
     disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc)
@@ -650,6 +660,7 @@ if action_required == 2:
     err = reboot_fpc_and_wait(cmerror_device, cmerror_slot)
     if err:
         LOG.error(f"LOGIC: Unable to reboot FPC {cmerror_slot} on {cmerror_device}: {err}")
+        LOG.info("")
         raise SystemExit(1) 
     
     LOG.info(f"LOGIC: FPC {cmerror_slot} REBOOTED on {cmerror_device}")
@@ -661,6 +672,7 @@ if action_required == 2:
     err = configure_interfaces_disable_state(cmerror_device, interfaces_fpc, action="enable")
     if err:
         LOG.error(f"LOGIC: Unable to enable interfaces on {cmerror_device}: {err}")
+        LOG.info("")
         raise SystemExit(1) 
     LOG.info(f"LOGIC: INTERFACES RE-ENABLED on {cmerror_device}")   
     write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo")
@@ -670,6 +682,7 @@ if action_required == 2:
     alarm_desc, err = check_fpc_major_alarm(cmerror_device, cmerror_slot)
     if err:
         LOG.error(f"LOGIC: Unable to connect to {cmerror_device}: {err}")
+        LOG.info("")
         raise SystemExit(1) 
     if alarm_desc:
         LOG.error(f"LOGIC: MAJOR FPC ALARM STILL EXISTS on {cmerror_device}: {alarm_desc}")
@@ -677,6 +690,7 @@ if action_required == 2:
 
         # Shutdown interfaces again for the FPC slot and PFE slot only and contact NOC team
         disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
+        LOG.info("")
         
     else:
         LOG.info(f"LOGIC: MAJOR FPC ALARM CLEARED on {cmerror_device}")
@@ -686,3 +700,4 @@ if action_required == 2:
         write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} is back online and major alarm cleared, interfaces re-enabled", host="influxdb", port=8086, db="demo")
 
         mark_cmerror_as_handled(db, cmerror_device, cmerror_id)
+        LOG.info("")
