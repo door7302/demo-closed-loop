@@ -271,9 +271,6 @@ def reboot_fpc_and_wait(router_name, fpc_slot):
         # Send the RPC
         dev.rpc(rpc)
 
-        LOG.info("LOGIC: Reboot command sent. Waiting 30 seconds before monitoring...")
-        time.sleep(30)
-
         timeout = 10 * 60   # 10 minutes
         interval = 10       # 10 seconds between checks
         waited = 0
