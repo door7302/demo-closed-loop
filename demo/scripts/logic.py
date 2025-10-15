@@ -356,6 +356,14 @@ def mark_cmerror_as_handled(db, cmerror_device, cmerror_id):
         None
     """
     try:
+
+         # --- Create compound unique index (only once) ---
+        db.cmerrors.create_index(
+            [("router_name", 1), ("cmerror_id", 1)],
+            unique=True,
+            name="router_cmerror_unique"
+        )
+
         result = db.cmerrors.update_one(
             {"router_name": cmerror_device, "cmerror_id": cmerror_id},
             {"$set": {"handled": True}}  
@@ -451,8 +459,10 @@ Message example:
 "timestamp":1760358802
 }
 """
+###############################@ PARSE MESSAGE #################################    
+# Extract relevant fields from the message
+################################################################################
 
-# Parse fields
 cmerror_clear = message_dict.get('fields', {}).get('cmerror_clear', None)
 cmerror_count = message_dict.get('fields', {}).get('cmerror_count', None)
 cmerror_desc = message_dict.get('fields', {}).get('cmerror_desc', None)
@@ -462,20 +472,62 @@ cmerror_update = message_dict.get('fields', {}).get('cmerror_update', None)
 # Parse tags
 cmerror_component = message_dict.get('tags', {}).get('component', None)
 cmerror_device = message_dict.get('tags', {}).get('device', None)
-cmerror_pfe = message_dict.get('tags', {}).get('_subcomponent_id', None)
+## CMERROR example: 
+# /fpc/0/platformd/0/cm/0/mqss/0/MQSS_CMERROR_DRD_TOP_ECC2_PROTECT_FSET_REG_DETECTED_FL_FIFO_MEM1
+# /fpc/0/platformd/0/cm/0/ytchip/1/YTCHIP_CMERROR_FLEXMEM_ECC_PROTECT_FSET_REG_DETECTED_SLICE 
+split_id = cmerror_id.split('/')
+cmerror_type = ""
+cmerror_pfe = ""
+if len(split_id) > 1:
+    cmerror_type = split_id[1].lower()
+    if len(split_id) >= 9:
+        cmerror_pfe = split_id[8].lower()
     
-##############################@ LOGIC #################################
 
-# Step 1: check if cmerror_clear is 0 or 1
+# Connect to MongoDB
+try:
+    mongo_client = MongoClient(MONGO_URI)
+    db = mongo_client[DB_NAME]
+    LOG.info("LOGIC: Connected to MongoDB successfully")
+except Exception as e:
+    LOG.error(f"LOGIC: Unable to connect to MongoDB: {e}")
+    LOG.info("")
+    raise SystemExit(1)
+
+##############################@ LOGIC ############################################
+# Main logic starts here
+
+##################################################################################
+# Step 1: check some conditions to exit early
+
+if cmerror_type != "fpc":
+    LOG.info(f"LOGIC: CMERROR type is {cmerror_type}, not FPC - NO ACTION REQUIRED")
+    LOG.info("")
+    sys.exit(0)
 if cmerror_clear == 1:
     LOG.info(f"LOGIC: CMERROR CLEARED for {cmerror_device} - {cmerror_desc} - NO ACTION REQUIRED")
     LOG.info("")
     sys.exit(0)
 
-# Step 2: check some data from MongoDB
 try:
-    client = MongoClient(MONGO_URI)
-    db = client[DB_NAME]
+    alarms = list(db.cmerrors.find({"router_name": cmerror_device}))
+    if alarms:
+        LOG.info(f"LOGIC: Found {len(alarms)} CMERROR(s) for router {cmerror_device}")
+        for alarm in alarms:
+            if not alarm.get("handled"):
+                LOG.info(f"LOGIC: Existing unhandled CMERROR: {alarm}")
+                LOG.info(f"LOGIC: Since there is already an unhandled CMERROR for {cmerror_device}, NO ACTION REQUIRED")
+                LOG.info("")
+                sys.exit(0)
+except Exception as e:
+    LOG.error(f"LOGIC: Unable to fetch CMERRORs for {cmerror_device}: {e}")
+    LOG.info("")
+    raise SystemExit(1)
+
+##################################################################################
+# Step 2: check some data from MongoDB
+
+try:
     # --- 1️⃣ Get router info ---
     router = db.routers.find_one({"router_name": cmerror_device}, {"_id": 0})
     if not router:
@@ -493,11 +545,12 @@ try:
     {"router_name": cmerror_device, "cmerror_id": cmerror_id},
     {"_id": 0}  
     )
-
 except Exception as e:
-    LOG.error(f"LOGIC: Unable to connect to MongoDB: {e}")
+    LOG.error(f"LOGIC: Unable to fetch data from MongoDB: {e}")
+    LOG.info("")
     raise SystemExit(1)
 
+##################################################################################
 # Step 3: Check if this cmerror_id already exists for this device
 
 """
@@ -514,6 +567,7 @@ cmerror structure:
   }
 """
 
+##################################################################################
 # Default no action required, 1 partial logic, 2 = full action required
 action_required = 0
 
@@ -524,50 +578,57 @@ if cm_error and cm_error.get("handled"):
         LOG.info("")
         sys.exit(0)
 
-    # Check if cmerror_count is increased
-    if cmerror_count > cm_error.get("cmerror_count"):
-        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - COUNT INCREASED")
-
-        # If this new alarm update is within 24 hours of the last update, and the count is increased
-        time_diff = (cmerror_update - cm_error.get("cmerror_update")) / 1000  # convert to seconds
-        if time_diff < 86400:
-            action_required = 1  # partial action required
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - PARTIAL ACTION REQUIRED (within 24 hours)")
-        else:
-            action_required = 2  # full action required
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - FULL ACTION REQUIRED (more than 24 hours)")
-
-        # Prepare the cmerror document
-        cmerror_doc = {
-            "router_name": cmerror_device,
-            "cmerror_id": cmerror_id,
-            "cmerror_count": cmerror_count,
-            "cmerror_update": cmerror_update,
-            "cmerror_slot": cmerror_slot,
-            "cmerror_desc": cmerror_desc,
-            "cmerror_pfe": cmerror_pfe,
-            "handled": False
-        }
-        try:
-            # Upsert ensures a document is created if it doesn't exist
-            result = db.cmerrors.update_one(
-                {"router_name": cmerror_device, "cmerror_id": cmerror_id},  # unique key
-                {"$set": cmerror_doc},
-                upsert=True
-            )
-            if result.matched_count:
-                LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} UPDATED in MongoDB")
-            else:
-                LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} CREATED in MongoDB")
-
-        except Exception as e:
-            LOG.error(f"LOGIC: Unable to update/create cmerror in MongoDB: {e}")
-            LOG.info("")
-            raise SystemExit(1)
+    # If this new alarm update is within 24 hours of the last update
+    time_diff = (cmerror_update - cm_error.get("cmerror_update")) / 1000  # convert to seconds
+    if time_diff < 86400:
+        action_required = 1  # partial action required
+        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - PARTIAL ACTION REQUIRED (within 24 hours)")
     else:
-        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO COUNT INCREASE")
+        action_required = 2  # full action required
+        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - FULL ACTION REQUIRED (more than 24 hours)")
+
+    # Prepare the new cmerror entry
+    new_error = {
+        "router_name": cmerror_device,
+        "cmerror_id": cmerror_id,
+        "cmerror_count": cmerror_count,
+        "cmerror_update": cmerror_update,
+        "cmerror_slot": cmerror_slot,
+        "cmerror_desc": cmerror_desc,
+        "cmerror_pfe": cmerror_pfe,
+        "handled": False
+    }
+
+    try:
+        # --- Create compound unique index (only once) ---
+        db.cmerrors.create_index(
+            [("router_name", 1), ("cmerror_id", 1)],
+            unique=True,
+            name="router_cmerror_unique"
+        )
+
+        # --- Upsert document based on (router_name, cmerror_id) ---
+        result = db.cmerrors.update_one(
+            {"router_name": cmerror_device, "cmerror_id": cmerror_id},
+            {"$set": new_error},
+            upsert=True
+        )
+
+        if result.matched_count:
+            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} updated")
+        else:
+            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} created")
+
+    except Exception as e:
+        LOG.error(f"LOGIC: Unable to update cmerror in MongoDB: {e}")
         LOG.info("")
-        sys.exit(0)
+        raise SystemExit(1)
+
+    except Exception as e:
+        LOG.error(f"LOGIC: Unable to update cmerror in MongoDB: {e}")
+        LOG.info("")
+        raise SystemExit(1)
+
 else:
     action_required = 2 # full action required
 
@@ -584,12 +645,20 @@ else:
     }
 
     try:
-        # Use update_one with upsert=True to ensure uniqueness
+        # --- Create compound unique index (only once) ---
+        db.cmerrors.create_index(
+            [("router_name", 1), ("cmerror_id", 1)],
+            unique=True,
+            name="router_cmerror_unique"
+        )
+
+        # --- Upsert document based on (router_name, cmerror_id) ---
         result = db.cmerrors.update_one(
-            {"router_name": cmerror_device, "cmerror_id": cmerror_id},  # unique key
-            {"$set": new_error},  # update all other fields
+            {"router_name": cmerror_device, "cmerror_id": cmerror_id},
+            {"$set": new_error},
             upsert=True
         )
+
         if result.matched_count:
             LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} updated")
         else:
@@ -600,6 +669,7 @@ else:
         LOG.info("")
         raise SystemExit(1)
 
+##################################################################################
 # Step 4: For each router from the same POP, connect to the router and check if Major alarms exist for any FPC 
 
 exesting_major_alarms = False
@@ -623,6 +693,7 @@ for router_name in pop_routers if pop_routers else []:
         LOG.info(f"LOGIC: MAJOR FPC ALARM EXISTS on {router_name}: {alarm_desc}")
         break
 
+##################################################################################
 # Step 5: If no Major FPC alarms exist on any router in the POP, and action_required is set 
 
 if action_required>0:
