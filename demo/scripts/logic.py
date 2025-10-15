@@ -186,7 +186,7 @@ def get_interfaces_by_slot(router_name, fpc_slot, pfe_slot):
 
     return interfaces_fpc_pfe, interfaces_fpc_only, err
 
-def configure_interfaces_disable_state(router_name, interfaces, action="disable"):
+def configure_interfaces_state(router_name, interfaces, action="disable"):
     """
     Connects to a Juniper router using PyEZ and sets or removes the 'disable'
     statement on a list of interfaces in a single commit.
@@ -368,9 +368,9 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
 
     return err
 
-def disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces):
+def disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces):
     """
-    Disables specified interfaces and notifies NOC team.
+    Disables specified interfaces
 
     Args:
         db: MongoDB database object.
@@ -386,19 +386,13 @@ def disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_
     """
     LOG.info(f"LOGIC: INTERFACES TO DISABLE on {cmerror_device}: {interfaces}")
     
-    err = configure_interfaces_disable_state(cmerror_device, interfaces, action="disable")
+    err = configure_interfaces_state(cmerror_device, interfaces, action="disable")
     if err:
         LOG.error(f"LOGIC: Unable to disable interfaces on {cmerror_device}: {err}")
         raise SystemExit(1) 
     
     LOG.info(f"LOGIC: INTERFACES DISABLED on {cmerror_device}")
     write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} and pfe {cmerror_pfe}", host="influxdb", port=8086, db="demo")
-
-    # Notify NOC team
-    LOG.info(f"LOGIC: NOTIFY NOC TEAM - PARTIAL ACTION TAKEN - INTERFACES DISABLED: {interfaces}")
-    write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
-
-    upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
 
 def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, handled=None):
     """
@@ -611,16 +605,11 @@ if cm_error and cm_error.get("handled"):
 
     if time_diff < 86400:  # < 24h
         action_required = 1
-        action_msg = "PARTIAL ACTION REQUIRED (within 24 hours)"
     else:
         action_required = 2
-        action_msg = "FULL ACTION REQUIRED (more than 24 hours)"
-
-    LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - {action_msg}")
 
 else:
     action_required = 2
-    LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - FULL ACTION REQUIRED (new or unhandled)")
 
 # Prepare and upsert the cmerror entry
 the_error = {
@@ -665,14 +654,14 @@ for router_name in pop_routers if pop_routers else []:
 
 if action_required>0:
     write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE slot {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
-    
-if action_required == 1:
     if exesting_major_alarms:
         LOG.info(f"LOGIC: MAJOR FPC ALARMS EXIST in POP {pop_name} - NO ACTION REQUIRED")
         write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, partial action required", host="influxdb", port=8086, db="demo")
-    else:
-        LOG.info(f"LOGIC: NO MAJOR FPC ALARMS in POP {pop_name} - ACTION REQUIRED LEVEL {action_required}")
-        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror, partial action required", host="influxdb", port=8086, db="demo")
+    
+if action_required == 1:
+    
+    LOG.info(f"LOGIC: NO OTHER MAJOR FPC ALARMS in POP {pop_name} - ACTION REQUIRED LEVEL {action_required}")
+    write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror, partial action required", host="influxdb", port=8086, db="demo")
    
     # Shut down ports attached to the affected FPC and PFE 
     interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
@@ -680,18 +669,24 @@ if action_required == 1:
         LOG.error(f"LOGIC: Unable to get interfaces from {cmerror_device}: {err}")
         LOG.info("")
         raise SystemExit(1) 
+    disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
 
-    disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
+    # Notify NOC team
+    write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
+    upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
 
 if action_required == 2:
+
+    LOG.info(f"LOGIC: NO OTHER MAJOR FPC ALARMS in POP {pop_name} - ACTION REQUIRED LEVEL {action_required}")
+    write_log_to_influx(cmerror_device, f"A new cmerror has been detected on {cmerror_device}, full action required", host="influxdb", port=8086, db="demo")
+
    # Shut down ports attached to the affected FPC 
     interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
     if err:
         LOG.error(f"LOGIC: Unable to get interfaces from {cmerror_device}: {err}")
         LOG.info("")
         raise SystemExit(1) 
-
-    disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc)
+    disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc)
 
     # Then reboot the Linecard
     write_log_to_influx(cmerror_device, f"Rebooting FPC {cmerror_slot} on device {cmerror_device}", host="influxdb", port=8086, db="demo")
@@ -707,7 +702,7 @@ if action_required == 2:
     # wait 10 seconds before re-enabling interfaces
     time.sleep(10)
 
-    err = configure_interfaces_disable_state(cmerror_device, interfaces_fpc, action="enable")
+    err = configure_interfaces_state(cmerror_device, interfaces_fpc, action="enable")
     if err:
         LOG.error(f"LOGIC: Unable to enable interfaces on {cmerror_device}: {err}")
         LOG.info("")
@@ -727,15 +722,11 @@ if action_required == 2:
         write_log_to_influx(cmerror_device, f"After rebooting FPC {cmerror_slot} on device {cmerror_device}, major alarm still exists: {alarm_desc}", host="influxdb", port=8086, db="demo")
 
         # Shutdown interfaces again for the FPC slot and PFE slot only and contact NOC team
-        disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
+        disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
         LOG.info("")
-        
     else:
-        LOG.info(f"LOGIC: MAJOR FPC ALARM CLEARED on {cmerror_device}")
-
-        # Notify NOC team
-        LOG.info(f"LOGIC: NOTIFY NOC TEAM - FULL ACTION SUCCESSFUL - INTERFACES RE-ENABLED: {interfaces_fpc}")
+        LOG.info(f"LOGIC: MAJOR FPC ALARM CLEARED on {cmerror_device} EVERYTHING BACK TO NORMAL")
         write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} is back online and major alarm cleared, interfaces re-enabled", host="influxdb", port=8086, db="demo")
-
-        mark_cmerror_as_handled(db, cmerror_device, cmerror_id)
         LOG.info("")
+
+    upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
