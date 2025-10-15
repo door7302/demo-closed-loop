@@ -1,3 +1,29 @@
+# Sample message structure
+"""
+Message example:
+{
+"fields":{
+    "cmerror_clear":0,
+    "cmerror_count":1,
+    "cmerror_desc":"DRD_TOP_ECC2_PROTECT: Detected: FL FIFO MEM1",
+    "cmerror_id":"/fpc/0/platformd/0/cm/0/mqss/0/MQSS_CMERROR_DRD_TOP_ECC2_PROTECT_FSET_REG_DETECTED_FL_FIFO_MEM1",
+    "cmerror_slot":0,
+    "cmerror_update":1760099160283
+},
+"name":"JUNOS_CMERROR",
+"tags":{
+    "/junos/chassis/cmerror/counters/name":"/fpc/0/platformd/0/cm/0/mqss/0/MQSS_CMERROR_DRD_TOP_ECC2_PROTECT_FSET_REG_DETECTED_FL_FIFO_MEM1",
+    "_component_id":"0",
+    "_subcomponent_id":"0",
+    "component":"fpc0/resiliencyd",
+    "device":"rtme-mx304-06.englab.juniper.net",
+    "host":"a4737c4624f4",
+    "path":"/junos/chassis/cmerror/counters"
+},
+"timestamp":1760358802
+}
+"""
+
 #!/usr/bin/env python3
 import sys
 import os
@@ -26,7 +52,7 @@ LOG.setLevel(logging.INFO)
 
 # File handler only
 file_handler = logging.FileHandler(log_file)
-file_formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
+file_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 file_handler.setFormatter(file_formatter)
 
 # Avoid duplicate handlers if reloaded
@@ -343,41 +369,6 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
 
     return err
 
-def mark_cmerror_as_handled(db, cmerror_device, cmerror_id):
-    """
-    Marks a cmerror as handled in MongoDB.
-
-    Args:
-        db: MongoDB database object.
-        cmerror_device (str): Router name.
-        cmerror_id (str): CM error ID.
-
-    Returns:
-        None
-    """
-    try:
-
-         # --- Create compound unique index (only once) ---
-        db.cmerrors.create_index(
-            [("router_name", 1), ("cmerror_id", 1)],
-            unique=True,
-            name="router_cmerror_unique"
-        )
-
-        result = db.cmerrors.update_one(
-            {"router_name": cmerror_device, "cmerror_id": cmerror_id},
-            {"$set": {"handled": True}}  
-        )
-
-        if result.matched_count:
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} marked as handled")
-        else:
-            LOG.warning(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} not found, cannot mark handled")
-
-    except Exception as e:
-        LOG.error(f"LOGIC: Unable to update 'handled' field in MongoDB: {e}")
-        raise SystemExit(1)
-
 def disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces):
     """
     Disables specified interfaces and notifies NOC team.
@@ -408,7 +399,75 @@ def disable_interfaces_and_notify_noc(db, cmerror_device, cmerror_slot, cmerror_
     LOG.info(f"LOGIC: NOTIFY NOC TEAM - PARTIAL ACTION TAKEN - INTERFACES DISABLED: {interfaces}")
     write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
 
-    mark_cmerror_as_handled(db, cmerror_device, cmerror_id)
+    upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
+
+def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, handled=None):
+    """
+    Create, update, or mark a CMERROR entry in MongoDB.
+
+    Modes:
+        - Upsert mode: provide 'error' dict (must include router_name & cmerror_id)
+        - Mark-handled mode: provide 'router_name', 'cmerror_id', and handled=True/False
+
+    Args:
+        db: MongoDB database handle (e.g. client["networkdb"])
+        LOG: logger instance
+        error (dict, optional): Full cmerror data to upsert
+        router_name (str, optional): Router name (for mark-handled mode)
+        cmerror_id (str, optional): CMERROR ID (for mark-handled mode)
+        handled (bool, optional): Whether to mark handled/unhandled
+
+    Returns:
+        str: "created", "updated", "marked", or "not_found"
+    """
+    try:
+        # Ensure compound unique index
+        db.cmerrors.create_index(
+            [("router_name", 1), ("cmerror_id", 1)],
+            unique=True,
+            name="router_cmerror_unique"
+        )
+
+        # --- Upsert mode ---
+        if error:
+            if "router_name" not in error or "cmerror_id" not in error:
+                raise ValueError("Error document must include 'router_name' and 'cmerror_id'")
+
+            result = db.cmerrors.update_one(
+                {"router_name": error["router_name"], "cmerror_id": error["cmerror_id"]},
+                {"$set": error},
+                upsert=True
+            )
+
+            if result.matched_count:
+                LOG.info(f"LOGIC: CMERROR for {error['router_name']} - {error['cmerror_id']} updated")
+                return "updated"
+            else:
+                LOG.info(f"LOGIC: CMERROR for {error['router_name']} - {error['cmerror_id']} created")
+                return "created"
+
+        # --- Mark-handled mode ---
+        elif router_name and cmerror_id and handled is not None:
+            result = db.cmerrors.update_one(
+                {"router_name": router_name, "cmerror_id": cmerror_id},
+                {"$set": {"handled": handled}}
+            )
+
+            if result.matched_count:
+                state = "handled" if handled else "unhandled"
+                LOG.info(f"LOGIC: CMERROR for {router_name} - {cmerror_id} marked as {state}")
+                return "marked"
+            else:
+                LOG.warning(f"LOGIC: CMERROR for {router_name} - {cmerror_id} not found")
+                return "not_found"
+
+        else:
+            raise ValueError("Invalid arguments: provide either 'error' or (router_name, cmerror_id, handled)")
+
+    except Exception as e:
+        LOG.error(f"LOGIC: MongoDB operation failed: {e}")
+        raise SystemExit(1)
+
 
 ##############################@ MAIN #############################################
 # Main script logic
@@ -427,38 +486,13 @@ except IndexError:
 # Parse message, which can be JSON or a Python dict string
 try:
     message_dict = json.loads(param)
-    LOG.info("LOGIC: Message parsed as JSON successfully")
 except json.JSONDecodeError:
     # fallback: maybe it's a Python dict string
     LOG.warning("LOGIC: Message is not valid JSON, trying to parse as Python dict string")
     import ast
     message_dict = ast.literal_eval(param)
 
-# Sample message structure
-"""
-Message example:
-{
-"fields":{
-    "cmerror_clear":0,
-    "cmerror_count":1,
-    "cmerror_desc":"DRD_TOP_ECC2_PROTECT: Detected: FL FIFO MEM1",
-    "cmerror_id":"/fpc/0/platformd/0/cm/0/mqss/0/MQSS_CMERROR_DRD_TOP_ECC2_PROTECT_FSET_REG_DETECTED_FL_FIFO_MEM1",
-    "cmerror_slot":0,
-    "cmerror_update":1760099160283
-},
-"name":"JUNOS_CMERROR",
-"tags":{
-    "/junos/chassis/cmerror/counters/name":"/fpc/0/platformd/0/cm/0/mqss/0/MQSS_CMERROR_DRD_TOP_ECC2_PROTECT_FSET_REG_DETECTED_FL_FIFO_MEM1",
-    "_component_id":"0",
-    "_subcomponent_id":"0",
-    "component":"fpc0/resiliencyd",
-    "device":"rtme-mx304-06.englab.juniper.net",
-    "host":"a4737c4624f4",
-    "path":"/junos/chassis/cmerror/counters"
-},
-"timestamp":1760358802
-}
-"""
+
 ###############################@ PARSE MESSAGE #################################    
 # Extract relevant fields from the message
 ################################################################################
@@ -482,20 +516,19 @@ if len(split_id) > 1:
     cmerror_type = split_id[1].lower()
     if len(split_id) >= 9:
         cmerror_pfe = split_id[8].lower()
-    
+
+
+##############################@ LOGIC ############################################
+# Main logic starts here
 
 # Connect to MongoDB
 try:
     mongo_client = MongoClient(MONGO_URI)
     db = mongo_client[DB_NAME]
-    LOG.info("LOGIC: Connected to MongoDB successfully")
 except Exception as e:
     LOG.error(f"LOGIC: Unable to connect to MongoDB: {e}")
     LOG.info("")
     raise SystemExit(1)
-
-##############################@ LOGIC ############################################
-# Main logic starts here
 
 ##################################################################################
 # Step 1: check some conditions to exit early
@@ -512,7 +545,6 @@ if cmerror_clear == 1:
 try:
     alarms = list(db.cmerrors.find({"router_name": cmerror_device}))
     if alarms:
-        LOG.info(f"LOGIC: Found {len(alarms)} CMERROR(s) for router {cmerror_device}")
         for alarm in alarms:
             if not alarm.get("handled"):
                 LOG.info(f"LOGIC: Existing unhandled CMERROR: {alarm}")
@@ -553,121 +585,50 @@ except Exception as e:
 ##################################################################################
 # Step 3: Check if this cmerror_id already exists for this device
 
-"""
-cmerror structure:
-  {
-    "router_name": "rtme-mx304-06.englab.juniper.net",
-    "cmerror_id": "...",
-    "cmerror_count": 2,
-    "cmerror_update": 1760099200000,
-    "cmerror_slot": 1,
-    "cmerror_desc": "...",
-    "cmerror_pfe": 0,
-    "handled": false
-  }
-"""
-
 ##################################################################################
-# Default no action required, 1 partial logic, 2 = full action required
+# Default action states:
+# 0 = no action required
+# 1 = partial action required (update within 24h)
+# 2 = full action required (new or >24h old)
 action_required = 0
 
 if cm_error and cm_error.get("handled"):
-    # if same timestamp, ignore
-    if cmerror_update == cm_error.get("cmerror_update"):
-        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)")
-        LOG.info("")
+    previous_update = cm_error.get("cmerror_update")
+
+    # Skip if same timestamp
+    if cmerror_update == previous_update:
+        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)\n")
         sys.exit(0)
 
-    # If this new alarm update is within 24 hours of the last update
-    time_diff = (cmerror_update - cm_error.get("cmerror_update")) / 1000  # convert to seconds
-    if time_diff < 86400:
-        action_required = 1  # partial action required
-        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - PARTIAL ACTION REQUIRED (within 24 hours)")
+    # Calculate time delta in seconds
+    time_diff = (cmerror_update - previous_update) / 1000
+
+    if time_diff < 86400:  # < 24h
+        action_required = 1
+        action_msg = "PARTIAL ACTION REQUIRED (within 24 hours)"
     else:
-        action_required = 2  # full action required
-        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - FULL ACTION REQUIRED (more than 24 hours)")
+        action_required = 2
+        action_msg = "FULL ACTION REQUIRED (more than 24 hours)"
 
-    # Prepare the new cmerror entry
-    new_error = {
-        "router_name": cmerror_device,
-        "cmerror_id": cmerror_id,
-        "cmerror_count": cmerror_count,
-        "cmerror_update": cmerror_update,
-        "cmerror_slot": cmerror_slot,
-        "cmerror_desc": cmerror_desc,
-        "cmerror_pfe": cmerror_pfe,
-        "handled": False
-    }
-
-    try:
-        # --- Create compound unique index (only once) ---
-        db.cmerrors.create_index(
-            [("router_name", 1), ("cmerror_id", 1)],
-            unique=True,
-            name="router_cmerror_unique"
-        )
-
-        # --- Upsert document based on (router_name, cmerror_id) ---
-        result = db.cmerrors.update_one(
-            {"router_name": cmerror_device, "cmerror_id": cmerror_id},
-            {"$set": new_error},
-            upsert=True
-        )
-
-        if result.matched_count:
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} updated")
-        else:
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} created")
-
-    except Exception as e:
-        LOG.error(f"LOGIC: Unable to update cmerror in MongoDB: {e}")
-        LOG.info("")
-        raise SystemExit(1)
-
-    except Exception as e:
-        LOG.error(f"LOGIC: Unable to update cmerror in MongoDB: {e}")
-        LOG.info("")
-        raise SystemExit(1)
+    LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - {action_msg}")
 
 else:
-    action_required = 2 # full action required
+    action_required = 2
+    LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - FULL ACTION REQUIRED (new or unhandled)")
 
-    # Prepare the new cmerror entry
-    new_error = {
-        "router_name": cmerror_device,
-        "cmerror_id": cmerror_id,
-        "cmerror_count": cmerror_count,
-        "cmerror_update": cmerror_update,
-        "cmerror_slot": cmerror_slot,
-        "cmerror_desc": cmerror_desc,
-        "cmerror_pfe": cmerror_pfe,
-        "handled": False
-    }
+# Prepare and upsert the cmerror entry
+the_error = {
+    "router_name": cmerror_device,
+    "cmerror_id": cmerror_id,
+    "cmerror_count": cmerror_count,
+    "cmerror_update": cmerror_update,
+    "cmerror_slot": cmerror_slot,
+    "cmerror_desc": cmerror_desc,
+    "cmerror_pfe": cmerror_pfe,
+    "handled": False,
+}
 
-    try:
-        # --- Create compound unique index (only once) ---
-        db.cmerrors.create_index(
-            [("router_name", 1), ("cmerror_id", 1)],
-            unique=True,
-            name="router_cmerror_unique"
-        )
-
-        # --- Upsert document based on (router_name, cmerror_id) ---
-        result = db.cmerrors.update_one(
-            {"router_name": cmerror_device, "cmerror_id": cmerror_id},
-            {"$set": new_error},
-            upsert=True
-        )
-
-        if result.matched_count:
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} updated")
-        else:
-            LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_id} created")
-
-    except Exception as e:
-        LOG.error(f"LOGIC: Unable to update cmerror in MongoDB: {e}")
-        LOG.info("")
-        raise SystemExit(1)
+upsert_or_mark_cmerror(db, error=the_error)
 
 ##################################################################################
 # Step 4: For each router from the same POP, connect to the router and check if Major alarms exist for any FPC 
