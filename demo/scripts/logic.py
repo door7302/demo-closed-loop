@@ -669,7 +669,7 @@ if err:
     
     raise SystemExit(1)
 if not alarm_desc:
-    LOG.info(f"CMERROR: ALARM for {cmerror_device} - {cmerror_desc} is not Major - NO ACTION REQUIRED")
+    LOG.debug(f"CMERROR: ALARM for {cmerror_device} - {cmerror_desc} is not Major - NO ACTION REQUIRED")
     sys.exit(0)
 
 try:
