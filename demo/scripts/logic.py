@@ -112,7 +112,6 @@ def check_fpc_major_alarm(router_name, fpc_slot=None):
             alarms = [alarms]
 
         for alarm in alarms:
-            LOG.info(f"CMERROR: Checking alarm: {etree.tostring(alarm, pretty_print=True).decode()}")   
             alarm_class = alarm.findtext('alarm-class', default='').strip()
             alarm_description = alarm.findtext('alarm-description', default='').strip()
 
@@ -121,9 +120,7 @@ def check_fpc_major_alarm(router_name, fpc_slot=None):
                 continue
 
             # Base condition (same as before)
-            if (re.search(r'fpc', alarm_description, re.IGNORECASE)
-                and re.search(r'major', alarm_description, re.IGNORECASE)):
-                
+            if re.search(r'fpc', alarm_description, re.IGNORECASE):
                 # If a specific FPC slot is provided, restrict match
                 if fpc_slot is not None:
                     pattern = rf'\b(fpc\s*{fpc_slot})\b'
