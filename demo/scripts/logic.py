@@ -517,7 +517,7 @@ def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, ha
         indexes = db.cmerrors.index_information()
         for name, info in indexes.items():
             if info.get("key") == [("router_name", 1)]:
-                LOG.warning(f"Dropping obsolete index: {name}")
+                LOG.debug(f"Dropping obsolete index: {name}")
                 db.cmerrors.drop_index(name)
 
         # --- Ensure compound unique index (router_name, cmerror_id) ---
@@ -539,10 +539,10 @@ def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, ha
             )
 
             if result.matched_count:
-                LOG.info(f"LOGIC: CMERROR for {error['router_name']} - {error['cmerror_id']} updated")
+                LOG.debug(f"LOGIC: CMERROR for {error['router_name']} - {error['cmerror_id']} updated")
                 return "updated"
             else:
-                LOG.info(f"LOGIC: CMERROR for {error['router_name']} - {error['cmerror_id']} created")
+                LOG.debug(f"LOGIC: CMERROR for {error['router_name']} - {error['cmerror_id']} created")
                 return "created"
 
         # --- Mark-handled mode ---
@@ -554,7 +554,7 @@ def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, ha
 
             if result.matched_count:
                 state = "handled" if handled else "unhandled"
-                LOG.info(f"LOGIC: CMERROR for {router_name} - {cmerror_id} marked as {state}")
+                LOG.debug(f"LOGIC: CMERROR for {router_name} - {cmerror_id} marked as {state}")
                 return "marked"
             else:
                 LOG.warning(f"LOGIC: CMERROR for {router_name} - {cmerror_id} not found")
@@ -575,8 +575,8 @@ def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, ha
 # Get param from command line argument
 try:
     param = sys.argv[1]
-    LOG.info("LOGIC: ----------------------------------------------------------------------------------- : LOGIC")
-    LOG.info(f"LOGIC: PARSES THE KAFKA MESSAGE: {param}")
+    LOG.debug("LOGIC: ----------------------------------------------------------------------------------- : LOGIC")
+    LOG.debug(f"LOGIC: PARSES THE KAFKA MESSAGE: {param}")
 except IndexError:
     LOG.error("LOGIC: No parameter provided")
     LOG.info("")
@@ -660,9 +660,9 @@ try:
     if alarms:
         for alarm in alarms:
             if alarm.get("handled") == False:
-                LOG.info(f"LOGIC: Existing unhandled CMERROR: {alarm}")
-                LOG.info(f"LOGIC: Since there is already an unhandled CMERROR for {cmerror_device}, SKIP THIS ALARM FOR NOW")
-                LOG.info("")
+                LOG.debug(f"LOGIC: Existing unhandled CMERROR: {alarm}")
+                LOG.debug(f"LOGIC: Since there is already an unhandled CMERROR for {cmerror_device}, SKIP THIS ALARM FOR NOW")
+                LOG.debug("")
                 sys.exit(0)
 except Exception as e:
     LOG.error(f"LOGIC: Unable to fetch CMERRORs for {cmerror_device}: {e}")
@@ -682,7 +682,7 @@ try:
     
     router_model = router.get("router_model").lower()
     if not re.search(r'mx|ptx', router_model):
-        LOG.info(f"LOGIC: Router model is {router_model}, not MX or PTX - MODEL NOT SUPPORTED - NO ACTION REQUIRED")
+        LOG.error(f"LOGIC: Router model is {router_model}, not MX or PTX - MODEL NOT SUPPORTED - NO ACTION REQUIRED")
         LOG.info("")
         raise SystemExit(0)
     else:
@@ -717,7 +717,7 @@ if cm_error and cm_error.get("handled"):
     previous_update = cm_error.get("cmerror_update")
     # Skip if same timestamp
     if cmerror_update == previous_update:
-        LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)\n")
+        LOG.debug(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)\n")
         sys.exit(0)
 
     # Calculate time delta in seconds
@@ -767,7 +767,7 @@ for router_name in pop_routers if pop_routers else []:
         # Override action_required to partial action only
         action_required = 1  # partial action required 
         
-        LOG.info(f"LOGIC: MAJOR FPC ALARM EXISTS on {router_name}: {alarm_desc}")
+        LOG.debug(f"LOGIC: MAJOR FPC ALARM EXISTS on {router_name}: {alarm_desc}")
         break
 
 ##################################################################################
