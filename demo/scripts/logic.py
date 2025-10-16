@@ -466,6 +466,7 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
         client.write_points(json_body)
 
     except Exception as e:
+        LOG.error(f"CMERROR: Unable to write log to InfluxDB: {e}")
         err = str(e)
 
     finally:
