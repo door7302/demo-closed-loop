@@ -795,12 +795,14 @@ if action_required>0:
     
 if action_required == 1:
     # You need the support of NOC team to open a ticket and manage this case manually
-    LOG.info(f"CMERROR: ACTION REQUIRED - CONTACT NOC for FPC {cmerror_slot} on {cmerror_device}")
+    LOG.info(f"CMERROR: NOC ACTION REQUIRED - CONTACT NOC for FPC {cmerror_slot} on {cmerror_device}")
 
     if exesting_major_alarms:
-        write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, partial action required", host="influxdb", port=8086, db="demo")
+        LOG.info(f"CMERROR: Major FPC alarm exists also in POP {pop_name}, for router {other_router}, NOC action required")
+        write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, NOC action required", host="influxdb", port=8086, db="demo")
     if less_than_24h:    
-        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror, partial action required", host="influxdb", port=8086, db="demo")
+        LOG.info(f"CMERROR: It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required")
+        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required", host="influxdb", port=8086, db="demo")
    
     write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
     write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
@@ -811,7 +813,7 @@ if action_required == 2:
 
     if router_type == "MX":
         # Shut down ports attached to the affected FPC 
-        LOG.info(f"CMERROR: ACTION REQUIRED - SHUTTING DOWN INTERFACES AND REBOOTING FPC {cmerror_slot} on {cmerror_device}")
+        LOG.info(f"CMERROR: AUTOMATIC ACTION - SHUTTING DOWN INTERFACES AND REBOOTING FPC {cmerror_slot} on {cmerror_device}")
         interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
         if err:
             LOG.error(f"CMERROR: Unable to get interfaces from {cmerror_device}: {err}")
@@ -838,7 +840,6 @@ if action_required == 2:
 
     if router_type == "PTX":
         
-
         if "pfe" in cmerror_scope:
             # get the PFE instance number from the PFE ID
             cmerror_pfe_instance, err = get_evo_pfe_instance(cmerror_device, cmerror_slot, cmerror_pfe)
@@ -859,13 +860,13 @@ if action_required == 2:
                 
                 raise SystemExit(1) 
             # Shut down ports attached to the affected FPC and PFE
-            LOG.info(f"CMERROR: ACTION REQUIRED - SHUTTING DOWN INTERFACES AND REBOOTING PFE {cmerror_pfe_instance} of FPC {cmerror_slot} on {cmerror_device}")
+            LOG.info(f"CMERROR: AUTOMATIC ACTION - SHUTTING DOWN INTERFACES AND REBOOTING PFE {cmerror_pfe_instance} of FPC {cmerror_slot} on {cmerror_device}")
             LOG.info(f"CMERROR: RESOLVE PFE INSTANCE {cmerror_pfe_instance} for PFE_ID {cmerror_pfe}")
             cmerror_pfe = str(cmerror_pfe_instance)
         elif "chip" in cmerror_scope:
-            LOG.info(f"CMERROR: ACTION REQUIRED - SHUTTING DOWN INTERFACES AND REBOOTING PFE {cmerror_pfe} of FPC {cmerror_slot} on {cmerror_device}")
+            LOG.info(f"CMERROR: AUTOMATIC ACTION - SHUTTING DOWN INTERFACES AND REBOOTING PFE {cmerror_pfe} of FPC {cmerror_slot} on {cmerror_device}")
         else:
-            LOG.info(f"CMERROR: ACTION REQUIRED - SHUTTING DOWN INTERFACES AND REBOOTING FPC {cmerror_slot} on {cmerror_device}")
+            LOG.info(f"CMERROR: AUTOMATIC ACTION - SHUTTING DOWN INTERFACES AND REBOOTING FPC {cmerror_slot} on {cmerror_device}")
 
         # Shut down ports attached to the affected FPC and PFE 
         interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
