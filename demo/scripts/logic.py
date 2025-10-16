@@ -41,7 +41,6 @@ from jnpr.junos.exception import ConnectError, RpcError, ConfigLoadError, Commit
 from jnpr.junos.utils.start_shell import StartShell
 
 # Set up logging
-# Create logs directory if it doesn't exist
 log_dir = "/opt/stackstorm/logs"
 os.makedirs(log_dir, exist_ok=True)
 
@@ -51,14 +50,24 @@ log_file = os.path.join(log_dir, "demo_logic.log")
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 
-# File handler only
+# Formatter
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+
+# File handler
 file_handler = logging.FileHandler(log_file)
-file_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-file_handler.setFormatter(file_formatter)
+file_handler.setFormatter(formatter)
+
+# Stream (stdout) handler
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
 
 # Avoid duplicate handlers if reloaded
 if not LOG.handlers:
     LOG.addHandler(file_handler)
+    LOG.addHandler(stream_handler)
+
+# Example usage
+LOG.debug("Logger initialized. Writing to both file and stdout.")
 
 # Set MongoDB connection parameters
 MONGO_URI = "mongodb://mongo:27017/"
