@@ -333,7 +333,7 @@ def reboot_fpc_and_wait(router_name, fpc_slot, pfe_slot, router_type):
             etree.SubElement(rpc, "slot").text = str(fpc_slot)
             etree.SubElement(rpc, "restart")
         elif router_type == "PTX":
-            LOG.info(f"LOGIC: Triggering reboot of PFE {pfe_slot} of the FPC {fpc_slot} {pfe_slot} on {router_name}...")
+            LOG.info(f"LOGIC: Triggering reboot of PFE {pfe_slot} of the FPC {fpc_slot} on {router_name}...")
             # Build custom RPC manually
             rpc = etree.Element("request-chassis-fpc")
             etree.SubElement(rpc, "slot").text = str(fpc_slot)
@@ -396,7 +396,7 @@ def reboot_fpc_and_wait(router_name, fpc_slot, pfe_slot, router_type):
                                 all_online = False
 
                         if all_online:
-                            LOG.info("LOGIC: All Datapath of PFE {pfe_slot} of FPC {fpc_slot} are ONLINE")
+                            LOG.info(f"LOGIC: All Datapath of PFE {pfe_slot} of FPC {fpc_slot} are ONLINE")
                             break
                 except Exception as e:
                     LOG.error(f"LOGIC: Failed to check PFE states: {e}")
@@ -712,9 +712,8 @@ except Exception as e:
 # 2 = full action required (new or >24h old)
 action_required = 0
 less_than_24h = False
-if cm_error and cm_error.get("handled"):
+if cm_error and cm_error.handled:
     previous_update = cm_error.get("cmerror_update")
-
     # Skip if same timestamp
     if cmerror_update == previous_update:
         LOG.info(f"LOGIC: CMERROR for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)\n")
