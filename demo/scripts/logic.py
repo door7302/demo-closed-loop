@@ -837,8 +837,7 @@ if action_required == 2:
         write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} rebooted successfully", host="influxdb", port=8086, db="demo")
 
     if router_type == "PTX":
-        # Shut down ports attached to the affected FPC and PFE
-        LOG.info(f"CMERROR: ACTION REQUIRED - SHUTTING DOWN INTERFACES AND REBOOTING FPC {cmerror_slot} on {cmerror_device}")
+        
 
         if "pfe" in cmerror_scope:
             # get the PFE instance number from the PFE ID
