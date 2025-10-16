@@ -275,6 +275,7 @@ def get_evo_pfe_instance(router_name, fpc_slot, pfe_id):
         ppfe_to_inst = {}
         table_started = False
 
+        LOG.warning(f"LOGIC: PFE ID to Instance mapping on {router_name} FPC {fpc_slot}: {op[1]}")
         for line in op[1].splitlines():
             line = line.strip()
             if not line:
@@ -303,7 +304,7 @@ def get_evo_pfe_instance(router_name, fpc_slot, pfe_id):
             dev.close()
             sh.close()
 
-    LOG.warning(f"LOGIC: PFE ID to Instance mapping on {router_name} FPC {fpc_slot}: {ppfe_to_inst}")
+    
     pfe_instance = ppfe_to_inst.get(int(pfe_id)) if pfe_id.isdigit() else None
     return pfe_instance, err
 
