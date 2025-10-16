@@ -460,7 +460,7 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
 
         json_body = [
             {
-                "measurement": "logs",
+                "measurement": "ST2LOGS",
                 "tags": {
                     "router_name": router_name
                 },
