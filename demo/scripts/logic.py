@@ -712,7 +712,7 @@ except Exception as e:
 # 2 = full action required (new or >24h old)
 action_required = 0
 less_than_24h = False
-if cm_error and cm_error.handled:
+if cm_error and cm_error.get("handled"):
     previous_update = cm_error.get("cmerror_update")
     # Skip if same timestamp
     if cmerror_update == previous_update:
