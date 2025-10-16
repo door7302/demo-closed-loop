@@ -119,3 +119,6 @@ MQSS_CMERROR_BCMF_ICM_FI_HPTRO_PROTECT_FSET_REG_CORRECTED_HPTR3B2),
 
  test cmerror trigger-error 0x3f0001 1 YTCHIP_CMERROR_FLEXMEM_ECC_PROTECT_FSET_REG_DETECTED_SLICE 4
  test cmerror trigger-error 0x310007 0 PIC_Retimer_Failure 124
+
+
+0x4502f5      0   Major      1        0       0        0        0                   pg_oct_8_cccdmacpcs_mac_intr_status_mac_tx_ovr_err
