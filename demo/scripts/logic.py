@@ -275,7 +275,7 @@ def get_evo_pfe_instance(router_name, fpc_slot, pfe_id):
         ppfe_to_inst = {}
         table_started = False
 
-        for line in op.splitlines():
+        for line in op[1].splitlines():
             line = line.strip()
             if not line:
                 continue
