@@ -112,6 +112,7 @@ def check_fpc_major_alarm(router_name, fpc_slot=None):
             alarms = [alarms]
 
         for alarm in alarms:
+            LOG.info(f"CMERROR: Checking alarm: {etree.tostring(alarm, pretty_print=True).decode()}")   
             alarm_class = alarm.findtext('alarm-class', default='').strip()
             alarm_description = alarm.findtext('alarm-description', default='').strip()
 
