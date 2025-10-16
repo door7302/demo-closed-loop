@@ -105,8 +105,13 @@ def check_fpc_major_alarm(router_name, fpc_slot=None):
         # Execute RPC to get alarm information
         rsp = dev.rpc.get_alarm_information()
 
-        # Parse alarm entries
-        for alarm in rsp.findall('.//alarm-detail', namespaces=rsp.nsmap):
+        alarms = rsp.findall('.//alarm-detail', namespaces=rsp.nsmap)
+
+        # Ensure it's always a list
+        if not isinstance(alarms, (list, tuple)):
+            alarms = [alarms]
+
+        for alarm in alarms:
             alarm_class = alarm.findtext('alarm-class', default='').strip()
             alarm_description = alarm.findtext('alarm-description', default='').strip()
 
@@ -179,7 +184,10 @@ def get_interfaces_by_slot(router_name, fpc_slot, pfe_slot):
         )
 
         # Iterate through interface entries
-        for if_entry in config.findall('.//interface', namespaces=config.nsmap):
+        interfaces = config.findall('.//interface', namespaces=config.nsmap) or []
+        interfaces = interfaces if isinstance(interfaces, (list, tuple)) else [interfaces]
+
+        for if_entry in interfaces:
             name = if_entry.findtext('name', default='').strip()
             if not name:
                 continue
@@ -395,7 +403,8 @@ def reboot_fpc_and_wait(router_name, fpc_slot, pfe_slot, router_type):
                     
             if router_type == "PTX":
                 try:
-                    pfe_instances = rsp.findall('.//pfe-info-values', namespaces=rsp.nsmap)
+                    pfe_instances = rsp.findall('.//pfe-info-values', namespaces=rsp.nsmap) or []
+                    pfe_instances = pfe_instances if isinstance(pfe_instances, (list, tuple)) else [pfe_instances]
                     if not pfe_instances:
                         LOG.warning("CMERROR: No PFE instances found in RPC reply.")
                     else:
