@@ -39,7 +39,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<h1><center>OPEN JTS</center></h1>",
+        "content": "<h1><center>CLOSED LOOP DEMO</center></h1>",
         "mode": "html"
       },
       "pluginVersion": "10.3.1",
@@ -82,7 +82,7 @@
           "refId": "A"
         }
       ],
-      "title": "OPEN JTS Dashboard",
+      "title": "CLOSED LOOP DEMO - Dashboards",
       "type": "dashlist"
     }
   ],
