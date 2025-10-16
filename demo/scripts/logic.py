@@ -270,12 +270,11 @@ def get_evo_pfe_instance(router_name, fpc_slot, pfe_id):
         sh = StartShell(dev)
         sh.open()
 
-        op = sh.run(f'cprod -A {fpc_slot} -c "show pfe id info"')
+        op = sh.run(f'cprod -A fpc{fpc_slot} -c "show pfe id info"')
 
         ppfe_to_inst = {}
         table_started = False
 
-        LOG.warning(f"LOGIC: PFE ID to Instance mapping on {router_name} FPC {fpc_slot}: {op[1]}")
         for line in op[1].splitlines():
             line = line.strip()
             if not line:
