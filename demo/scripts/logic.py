@@ -129,6 +129,7 @@ def check_fpc_major_alarm(router_name, fpc_slot=None):
                     break
 
     except (ConnectError, RpcError, Exception) as e:
+        LOG.error(f"CMERROR: Unable to connect to {router_name} to check for Major alarms: {e}")
         err = str(e)
     finally:
         if dev and dev.connected:
@@ -549,10 +550,10 @@ def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, ha
             )
 
             if result.matched_count:
-                LOG.debug(f"CMERROR: CMERROR for {error['router_name']} - {error['cmerror_id']} updated")
+                LOG.debug(f"CMERROR: ALARM for {error['router_name']} - {error['cmerror_id']} updated")
                 return "updated"
             else:
-                LOG.debug(f"CMERROR: CMERROR for {error['router_name']} - {error['cmerror_id']} created")
+                LOG.debug(f"CMERROR: ALARM for {error['router_name']} - {error['cmerror_id']} created")
                 return "created"
 
         # --- Mark-handled mode ---
@@ -564,10 +565,10 @@ def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, ha
 
             if result.matched_count:
                 state = "handled" if handled else "unhandled"
-                LOG.debug(f"CMERROR: CMERROR for {router_name} - {cmerror_id} marked as {state}")
+                LOG.debug(f"CMERROR: ALARM for {router_name} - {cmerror_id} marked as {state}")
                 return "marked"
             else:
-                LOG.warning(f"CMERROR: CMERROR for {router_name} - {cmerror_id} not found")
+                LOG.warning(f"CMERROR: ALARM for {router_name} - {cmerror_id} not found")
                 return "not_found"
 
         else:
@@ -646,11 +647,11 @@ except Exception as e:
 # Step 1: check some conditions to exit early
 
 if cmerror_type != "fpc":
-    LOG.info(f"CMERROR: CMERROR type is {cmerror_type}, not FPC - NO ACTION REQUIRED")
+    LOG.info(f"CMERROR: ALARM type is {cmerror_type}, not FPC - NO ACTION REQUIRED")
     
     sys.exit(0)
 if cmerror_clear == 1:
-    LOG.info(f"CMERROR: CMERROR CLEARED for {cmerror_device} - {cmerror_desc} - NO ACTION REQUIRED")
+    LOG.info(f"CMERROR: ALARM CLEARED for {cmerror_device} - {cmerror_desc} - NO ACTION REQUIRED")
     
     sys.exit(0)
 
@@ -661,8 +662,7 @@ if err:
     
     raise SystemExit(1)
 if not alarm_desc:
-    LOG.info(f"CMERROR: CMERROR for {cmerror_device} - {cmerror_desc} is not Major - NO ACTION REQUIRED")
-    
+    LOG.info(f"CMERROR: ALARM for {cmerror_device} - {cmerror_desc} is not Major - NO ACTION REQUIRED")
     sys.exit(0)
 
 try:
@@ -671,7 +671,7 @@ try:
         for alarm in alarms:
             if alarm.get("handled") == False:
                 LOG.debug(f"CMERROR: Existing unhandled CMERROR: {alarm}")
-                LOG.debug(f"CMERROR: Since there is already an unhandled CMERROR for {cmerror_device}, SKIP THIS ALARM FOR NOW")
+                LOG.debug(f"CMERROR: Since there is already an unhandled ALARM for {cmerror_device}, SKIP THIS ALARM FOR NOW")
                 LOG.debug("")
                 sys.exit(0)
 except Exception as e:
@@ -727,7 +727,7 @@ if cm_error and cm_error.get("handled"):
     previous_update = cm_error.get("cmerror_update")
     # Skip if same timestamp
     if cmerror_update == previous_update:
-        LOG.debug(f"CMERROR: CMERROR for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)\n")
+        LOG.debug(f"CMERROR: ALARM for {cmerror_device} - {cmerror_desc} - NO UPDATE (same timestamp)\n")
         sys.exit(0)
 
     # Calculate time delta in seconds
@@ -742,7 +742,7 @@ if cm_error and cm_error.get("handled"):
 else:
     action_required = 2
 
-# Prepare and upsert the cmerror entry
+# Prepare and upsert the ALARM entry
 the_error = {
     "router_name": cmerror_device,
     "cmerror_id": cmerror_id,
@@ -763,7 +763,7 @@ exesting_major_alarms = False
 other_router = None
 
 for router_name in pop_routers if pop_routers else []:
-    # Skip the router where the cmerror was raised
+    # Skip the router where the ALARM was raised
     if router_name == cmerror_device:
         continue
     alarm_desc, err = check_fpc_major_alarm(router_name)
