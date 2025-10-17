@@ -88,6 +88,9 @@ prepare_folders() {
     # Create Logs folder
     mkdir -p "${STACKSTORM_DIR}/logs"
 
+    # ST2 NGINX config
+    cp "${DEMO_REPO}/st2config/nginx.conf" "${STACKSTORM_DIR}/files/" || err "Missing nginx.conf in demo repo"
+
 }
 
 #------------------------------------------------------------
