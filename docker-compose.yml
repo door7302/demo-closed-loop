@@ -98,11 +98,6 @@ services:
       - st2auth
       - st2api
       - st2stream
-    healthcheck:
-      test: ["CMD", "/st2web-healthcheck.sh"]
-      interval: 30s
-      timeout: 1s
-      retries: 1
     volumes:
       - /opt/stackstorm/scripts/st2web-healthcheck.sh:/st2web-healthcheck.sh
       - /etc/ssl/st2:/etc/ssl/st2:rw
