@@ -101,8 +101,8 @@ services:
     volumes:
       #- /opt/stackstorm/scripts/st2web-healthcheck.sh:/st2web-healthcheck.sh
       - /etc/ssl/st2:/etc/ssl/st2:rw
-      #- /var/log/nginx:/var/log/nginx:rw
-      #- /opt/stackstorm/nginx:/etc/nginx/conf.d:rw 
+      - /var/log/nginx:/var/log/nginx:rw
+      - /opt/stackstorm/nginx:/etc/nginx/conf.d:rw 
     ports:
       - "${ST2_EXPOSE_HTTP:-127.0.0.1:80}:80"
       - "${ST2_EXPOSE_HTTPS:-127.0.0.1:443}:443"
