@@ -107,6 +107,7 @@ services:
       - /opt/stackstorm/scripts/st2web-healthcheck.sh:/st2web-healthcheck.sh
       - /etc/ssl/st2:/etc/ssl/st2:rw
       - /var/log/nginx:/var/log/nginx:rw
+      - /opt/stackstorm/nginx:/etc/nginx:rw
       #- /opt/stackstorm/files/st2.conf:/etc/nginx/conf.d/st2.conf:rw 
       - /opt/stackstorm/files/nginx.conf:/etc/nginx/nginx.conf:rw 
       # If you want to use a custom st2web config, edit /opt/stackstorm/files/config.js accordingly and

@@ -92,6 +92,7 @@ prepare_folders() {
     cp "${DEMO_REPO}/st2web/nginx.conf" "${STACKSTORM_DIR}/files/" || err "Missing nginx.conf in demo repo"
     cp "${DEMO_REPO}/st2web/st2.conf" "${STACKSTORM_DIR}/files/" || err "Missing st2.conf in demo repo"
 
+    mkdir -p "${STACKSTORM_DIR}/nginx"
 }
 
 #------------------------------------------------------------
