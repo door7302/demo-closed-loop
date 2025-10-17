@@ -20,7 +20,7 @@ services:
       - /opt/influxdb/data:/var/lib/influxdb
 # Telegraf service 
   telegraf:
-    build: https://github.com/door7302/jts_telegraf.git#v1.0.16
+    build: http://github.com/door7302/jts_telegraf.git#v1.0.16
     image: jts_telegraf:latest
     container_name: jts_telegraf
     restart: always
@@ -90,9 +90,9 @@ services:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2web:${ST2_VERSION:-latest}
     restart: on-failure
     environment:
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
       ST2WEB_HTTPS: ${ST2WEB_HTTPS:-0}
     depends_on:
       - st2auth
@@ -107,8 +107,7 @@ services:
       - /opt/stackstorm/scripts/st2web-healthcheck.sh:/st2web-healthcheck.sh
       - /etc/ssl/st2:/etc/ssl/st2:rw
       - /var/log/nginx:/var/log/nginx:rw
-      #- /opt/stackstorm/files/st2.conf:/etc/nginx/conf.d/st2.conf:rw 
-      - /opt/stackstorm/files/nginx.conf:/etc/nginx/nginx.conf:rw 
+      - /opt/stackstorm/nginx:/etc/nginx/conf.d:rw 
       # If you want to use a custom st2web config, edit /opt/stackstorm/files/config.js accordingly and
       # uncomment the line below
       #- /opt/stackstorm/files/config.js:/opt/stackstorm/static/webui/config.js:ro
@@ -139,9 +138,9 @@ services:
     networks:
       - private
     environment:
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
@@ -283,9 +282,9 @@ services:
       - private
     environment:
       ST2CLIENT: 1
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
       TZ: ${TZ:-UTC}
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
@@ -313,16 +312,16 @@ services:
     networks:
       - private
     environment:
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
       ST2_API_KEY: ${ST2_API_KEY:-change-to-your-st2-api-key}
       TZ: ${TZ:-UTC}
       # enable chatops by setting this variable to any non-zero value
       # and enable/set your hubot adapter specific variables below
       ST2_CHATOPS_ENABLE: ${ST2_CHATOPS_ENABLE:-0}
       # Custom hubot adapter ENV variables to pass through which will override st2chatops.env defaults.
-      # See https://github.com/StackStorm/st2chatops/blob/master/st2chatops.env
+      # See http://github.com/StackStorm/st2chatops/blob/master/st2chatops.env
       # for the full list of supported adapters and example ENV variables.
       HUBOT_ADAPTER: ${HUBOT_ADAPTER:-slack}
       HUBOT_LOG_LEVEL: ${HUBOT_LOG_LEVEL:-debug}
