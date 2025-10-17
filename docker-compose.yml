@@ -110,7 +110,7 @@ services:
       # uncomment the line below
       #- /opt/stackstorm/files/config.js:/opt/stackstorm/static/webui/config.js:ro
     ports:
-      - "${ST2_EXPOSE_HTTP:-127.0.0.1:80}:80"
+      #- "${ST2_EXPOSE_HTTP:-127.0.0.1:80}:80"
       - "${ST2_EXPOSE_HTTPS:-127.0.0.1:443}:443"
       # more work would be needed with certificate generate to make https work.
     networks:

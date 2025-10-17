@@ -4,9 +4,7 @@ export PATH=$PATH:/opt/kafka/bin
 kafka-topics.sh --create --bootstrap-server 10.83.153.137:9092 --replication-factor 1 --partitions 1 --topic cmerror
 kafka-topics.sh --list --bootstrap-server 10.83.153.137:9092
 
-
-
-
+Ch@ngeMe
 
 # 1. Register pack
 
