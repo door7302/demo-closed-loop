@@ -90,9 +90,9 @@ services:
     image: ${ST2_IMAGE_REPO:-stackstorm/}st2web:${ST2_VERSION:-latest}
     restart: on-failure
     environment:
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
       ST2WEB_HTTPS: ${ST2WEB_HTTPS:-0}
     depends_on:
       - st2auth
@@ -139,9 +139,9 @@ services:
     networks:
       - private
     environment:
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
       - /opt/stackstorm/files/st2.user.conf:/etc/st2/st2.user.conf:ro
@@ -283,9 +283,9 @@ services:
       - private
     environment:
       ST2CLIENT: 1
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
       TZ: ${TZ:-UTC}
     volumes:
       - /opt/stackstorm/files/st2.docker.conf:/etc/st2/st2.docker.conf:ro
@@ -313,9 +313,9 @@ services:
     networks:
       - private
     environment:
-      ST2_AUTH_URL: ${ST2_AUTH_URL:-http://st2auth:9100/}
-      ST2_API_URL: ${ST2_API_URL:-http://st2api:9101/}
-      ST2_STREAM_URL: ${ST2_STREAM_URL:-http://st2stream:9102/}
+      ST2_AUTH_URL: ${ST2_AUTH_URL:-https://st2auth:9100/}
+      ST2_API_URL: ${ST2_API_URL:-https://st2api:9101/}
+      ST2_STREAM_URL: ${ST2_STREAM_URL:-https://st2stream:9102/}
       ST2_API_KEY: ${ST2_API_KEY:-change-to-your-st2-api-key}
       TZ: ${TZ:-UTC}
       # enable chatops by setting this variable to any non-zero value
