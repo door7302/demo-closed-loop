@@ -89,10 +89,10 @@ prepare_folders() {
     mkdir -p "${STACKSTORM_DIR}/logs"
 
     # ST2 NGINX config
-    mkdir -p "${STACKSTORM_DIR}/nginx"
-    mkdir -p "/var/log/nginx"
-    cp "${DEMO_REPO}/st2web/st2-http.template" "${STACKSTORM_DIR}/nginx/" || err "Missing st2-http.template in demo repo"
-    cp "${DEMO_REPO}/st2web/st2-https.template" "${STACKSTORM_DIR}/nginx/" || err "Missing st2-https.template in demo repo"
+    #mkdir -p "${STACKSTORM_DIR}/nginx"
+    #mkdir -p "/var/log/nginx"
+    #cp "${DEMO_REPO}/st2web/st2-http.template" "${STACKSTORM_DIR}/nginx/" || err "Missing st2-http.template in demo repo"
+    #cp "${DEMO_REPO}/st2web/st2-https.template" "${STACKSTORM_DIR}/nginx/" || err "Missing st2-https.template in demo repo"
 
     
 }
