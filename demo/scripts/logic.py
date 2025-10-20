@@ -40,7 +40,6 @@ from jnpr.junos.utils.config import Config
 from jnpr.junos.exception import ConnectError, RpcError, ConfigLoadError, CommitError
 from jnpr.junos.utils.start_shell import StartShell
 from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 
 # Set up logging
 log_dir = "/opt/stackstorm/logs"
