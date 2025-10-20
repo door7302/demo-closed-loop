@@ -49,7 +49,7 @@ log_file = os.path.join(log_dir, "demo_logic.log")
 
 # Initialize logger
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.INFO)
+LOG.setLevel(logging.DEBUG)
 
 # Formatter
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -501,7 +501,8 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
         client = WebClient(token=SLACK_TOKEN)
         emoji = EMOJI.get(emoji, "")
         if emoji!= "":
-            message = EMOJI[emoji] + " " + message
+            message = emoji + " " + message
+        
         response = client.chat_postMessage(
             channel="#noc-support",
             text=message
