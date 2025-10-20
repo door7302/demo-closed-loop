@@ -39,6 +39,8 @@ from jnpr.junos import Device
 from jnpr.junos.utils.config import Config
 from jnpr.junos.exception import ConnectError, RpcError, ConfigLoadError, CommitError
 from jnpr.junos.utils.start_shell import StartShell
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 # Set up logging
 log_dir = "/opt/stackstorm/logs"
@@ -72,6 +74,9 @@ LOG.debug("Logger initialized. Writing to both file and stdout.")
 # Set MongoDB connection parameters
 MONGO_URI = "mongodb://mongo:27017/"
 DB_NAME = "networkdb"
+
+# SLACK TOKEN
+SLACK_TOKEN="xoxb-9734040494420-9715232892391-60WptiOLzM2pGvgt00ayNpae"
 
 ######################################@ FUNCTIONS ################################
 # Function definitions
@@ -482,6 +487,16 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
             client.close()
         except:
             pass
+    
+    try:
+        client = WebClient(token=SLACK_TOKEN)
+
+        response = client.chat_postMessage(
+            channel="#noc-support",
+            text=message
+        )
+    except Exception as e: 
+       LOG.error(f"Error sending Slack message: {e.response['error']}")
 
     return err
 
@@ -792,7 +807,8 @@ for router_name in pop_routers if pop_routers else []:
 
 if action_required>0:
     write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE slot {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
-    
+    write_log_to_influx(cmerror_device, f"Follow details here: https://rtme-ubuntu-07.englab.juniper.net:8080/d/democlosedloop/demo-closed-loop?orgId=1&refresh=5s&var-rtr={cmerror_device}", host="influxdb", port=8086, db="demo")
+
 if action_required == 1:
     # You need the support of NOC team to open a ticket and manage this case manually
     LOG.info(f"CMERROR: NOC ACTION REQUIRED - CONTACT NOC for FPC {cmerror_slot} on {cmerror_device}")
