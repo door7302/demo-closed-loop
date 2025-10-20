@@ -75,7 +75,7 @@ MONGO_URI = "mongodb://mongo:27017/"
 DB_NAME = "networkdb"
 
 # SLACK TOKEN
-SLACK_TOKEN="xoxb-9734040494420-9715232892391-yiUIiqr6SMVfA22pv4TDQjOz"
+SLACK_TOKEN="xoxb-9734040494420-9715232892391-fk8kZVxok2TQaoqHMrPSD4xH"
 
 ######################################@ FUNCTIONS ################################
 # Function definitions
