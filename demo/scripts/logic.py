@@ -535,9 +535,6 @@ def disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id
         LOG.error(f"CMERROR: Unable to disable interfaces on {cmerror_device}: {err}")
         raise SystemExit(1) 
     
-    LOG.info(f"CMERROR: INTERFACES DISABLED on {cmerror_device}")
-    write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} and pfe {cmerror_pfe}", host="influxdb", port=8086, db="demo", emoji="action")
-
 def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, handled=None):
     """
     Create, update, or mark a CMERROR entry in MongoDB.
@@ -987,7 +984,7 @@ if action_required == 2:
                 
                 raise SystemExit(1) 
             LOG.info(f"CMERROR: INTERFACES RE-ENABLED on {cmerror_device}")   
-            write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device}, PFE {cmerror_pfe} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device}, PFE {cmerror_pfe} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
         else:
             err = configure_interfaces_state(cmerror_device, interfaces_fpc, action="enable")
             if err:
