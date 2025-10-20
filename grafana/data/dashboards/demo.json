@@ -24,7 +24,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 2,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -46,6 +45,7 @@
             "inspect": false
           },
           "mappings": [],
+          "noValue": "No logs",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -127,7 +127,7 @@
           "tags": []
         }
       ],
-      "title": "Panel Title",
+      "title": "STACKSTORM NOTIFICATIONS",
       "transformations": [
         {
           "id": "organize",
@@ -152,277 +152,10 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 48,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "demouid"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "INTERFACES",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "select if_name, in_octets_rate from INTERFACES where time > now()-30s and device='rtme-mx304-06.englab.juniper.net'",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "in_octets_rate"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "device::tag",
-              "operator": "=~",
-              "value": "/^$rtr$/"
-            }
-          ]
-        }
-      ],
-      "title": "Panel Title",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "demouid"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "center",
-            "cellOptions": {
-              "type": "color-background"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 8,
-        "x": 0,
-        "y": 17
-      },
-      "id": 46,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "alias": "",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "demouid"
-          },
-          "groupBy": [],
-          "measurement": "COMPONENTS",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"idle_cpu\") FROM \"COMPONENTS\" WHERE \"device\"::tag=~ /^$rtr$/ AND $timeFilter group by device",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "component_name::tag",
-              "operator": "=~",
-              "value": "/^$comp_name$/"
-            },
-            {
-              "condition": "AND",
-              "key": "property_name::tag",
-              "operator": "=~",
-              "value": "/^$prop_name$/"
-            }
-          ]
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "HW_TYPE": true,
-              "Time": true,
-              "_component_id": true,
-              "component": true,
-              "component_name": true,
-              "device": false,
-              "host": true,
-              "if_name": true,
-              "last": true,
-              "path": true,
-              "property_name": true
-            },
-            "includeByName": {},
-            "indexByName": {
-              "HW_TYPE": 1,
-              "MODEL": 3,
-              "SHORTNAME": 2,
-              "Time": 0,
-              "VERSION": 4,
-              "_component_id": 5,
-              "component": 8,
-              "component_name": 9,
-              "host": 10,
-              "if_name": 6,
-              "last": 12,
-              "path": 11,
-              "property_name": 7
-            },
-            "renameByName": {
-              "MODEL": "Router Model",
-              "SHORTNAME": "Device Name",
-              "VERSION": "Device Version",
-              "device": " "
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "demouid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
             "mode": "thresholds"
           },
           "mappings": [],
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -441,10 +174,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 8,
-        "y": 17
+        "h": 5,
+        "w": 2,
+        "x": 0,
+        "y": 8
       },
       "id": 35,
       "options": {
@@ -552,259 +285,8 @@
           ]
         }
       ],
-      "title": "CHASSIS ALARMS",
+      "title": "ALARMS",
       "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "demouid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Type"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 172
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 161
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time Triggered"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 209
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 20
-      },
-      "id": 24,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "alias": "",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "demouid"
-          },
-          "groupBy": [],
-          "hide": false,
-          "measurement": "JUNOS_ALARMS",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"alarm_severity\"), last(\"alarm_resource\"), last(\"alarm_time\")/1000000, last(\"alarm_text\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"/system/alarms/alarm/id\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "alarm_severity"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "alarm_resource"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "alarm_time"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "alarm_text"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "SHORTNAME",
-              "operator": "=~",
-              "value": "/^$rtr$/"
-            }
-          ]
-        },
-        {
-          "alias": "",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "demouid"
-          },
-          "groupBy": [],
-          "hide": false,
-          "measurement": "JUNOS_ALARMS",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"alarm_severity_net\"), last(\"alarm_resource_net\"), last(\"alarm_time_net\"), last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"alarm_id_net\"",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "alarm_severity"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "alarm_resource"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "alarm_time"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "alarm_text"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "SHORTNAME",
-              "operator": "=~",
-              "value": "/^$rtr$/"
-            }
-          ]
-        }
-      ],
-      "title": "Chassis Alarms",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "time",
-                "targetField": "last_2"
-              }
-            ],
-            "fields": {}
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "/system/alarms/alarm/id": true,
-              "Time": true,
-              "alarm_id_net": true,
-              "last_1": true
-            },
-            "includeByName": {},
-            "indexByName": {
-              "Time": 0,
-              "last": 2,
-              "last_1": 3,
-              "last_2": 1,
-              "last_3": 4
-            },
-            "renameByName": {
-              "last": "Severity",
-              "last_1": "Type",
-              "last_2": "Time Triggered",
-              "last_3": "Info"
-            }
-          }
-        }
-      ],
-      "type": "table"
     },
     {
       "activePatternIndex": 5,
@@ -854,10 +336,10 @@
       },
       "default_title_for_rows": "Alarm",
       "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 0,
-        "y": 26
+        "h": 5,
+        "w": 22,
+        "x": 2,
+        "y": 8
       },
       "id": 9,
       "non_matching_cells_text": "",
@@ -1083,7 +565,7 @@
           "measurement": "JUNOS_CMERROR",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last( \"cmerror_count\") FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND $timeFilter and cmerror_name!='' GROUP BY cmerror_name",
+          "query": "SELECT last( \"cmerror_count\") FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND time > now() - 30s and cmerror_name!='' GROUP BY cmerror_name",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1131,7 +613,7 @@
           "measurement": "JUNOS_CMERROR",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last( \"cmerror_update\") FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND $timeFilter and cmerror_name!='' GROUP BY cmerror_name",
+          "query": "SELECT last( \"cmerror_update\") FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND time > now() - 30s  and cmerror_name!='' GROUP BY cmerror_name",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1179,7 +661,7 @@
           "measurement": "JUNOS_CMERROR",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last( \"cmerror_clear\") FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND $timeFilter and cmerror_name!='' GROUP BY cmerror_name",
+          "query": "SELECT last( \"cmerror_clear\") FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND time > now() - 30s and cmerror_name!='' GROUP BY cmerror_name",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -1227,7 +709,7 @@
           "measurement": "JUNOS_CMERROR",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last( \"cmerror_slot\")+0.1 FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND $timeFilter and cmerror_name!='' GROUP BY cmerror_name",
+          "query": "SELECT last( \"cmerror_slot\")+0.1 FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND time > now() - 30s and cmerror_name!='' GROUP BY cmerror_name",
           "rawQuery": true,
           "refId": "D",
           "resultFormat": "time_series",
@@ -1275,7 +757,7 @@
           "measurement": "JUNOS_CMERROR",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT  last( \"cmerror_clear\")-last( \"cmerror_update\")+0.1 FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND $timeFilter and cmerror_name!='' GROUP BY cmerror_name",
+          "query": "SELECT  last( \"cmerror_clear\")-last( \"cmerror_update\")+0.1 FROM \"JUNOS_CMERROR\" WHERE (\"device\" =~ /^$rtr$/) AND time > now() - 30s and cmerror_name!='' GROUP BY cmerror_name",
           "rawQuery": true,
           "refId": "E",
           "resultFormat": "time_series",
@@ -1310,6 +792,498 @@
       "title": "CMERROR",
       "transformations": [],
       "type": "yesoreyeram-boomtable-panel"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "demouid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "No Alarms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 172
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 161
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time Triggered"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 209
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 24,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "10.3.1",
+      "targets": [
+        {
+          "alias": "",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "demouid"
+          },
+          "groupBy": [],
+          "hide": false,
+          "measurement": "JUNOS_ALARMS",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"alarm_severity\"), last(\"alarm_resource\"), last(\"alarm_time\")/1000000, last(\"alarm_text\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"/system/alarms/alarm/id\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "alarm_severity"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alarm_resource"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alarm_time"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alarm_text"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "SHORTNAME",
+              "operator": "=~",
+              "value": "/^$rtr$/"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "demouid"
+          },
+          "groupBy": [],
+          "hide": false,
+          "measurement": "JUNOS_ALARMS",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"alarm_severity_net\"), last(\"alarm_resource_net\"), last(\"alarm_time_net\"), last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"alarm_id_net\"",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "alarm_severity"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alarm_resource"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alarm_time"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alarm_text"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "SHORTNAME",
+              "operator": "=~",
+              "value": "/^$rtr$/"
+            }
+          ]
+        }
+      ],
+      "title": "Chassis Alarms",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "time",
+                "targetField": "last_2"
+              }
+            ],
+            "fields": {}
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "/system/alarms/alarm/id": true,
+              "Time": true,
+              "alarm_id_net": true,
+              "last_1": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "last": 2,
+              "last_1": 3,
+              "last_2": 1,
+              "last_3": 4
+            },
+            "renameByName": {
+              "last": "Severity",
+              "last_1": "Type",
+              "last_2": "Time Triggered",
+              "last_3": "Info"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "demouid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 21,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bps",
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 48,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "Input bps - $tag_if_name",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "demouid"
+          },
+          "groupBy": [],
+          "hide": false,
+          "measurement": "INTERFACES",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT \"in_octets_rate\"*8 FROM \"INTERFACES\" WHERE (\"device\"::tag =~ /^$rtr$/) AND $timeFilter group by if_name fill(null)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "in_octets_rate"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "device::tag",
+              "operator": "=~",
+              "value": "/^$rtr$/"
+            }
+          ]
+        }
+      ],
+      "title": "Input Interface Stats",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "demouid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 21,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bps",
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 49,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "Output bps - $tag_if_name",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "demouid"
+          },
+          "groupBy": [],
+          "hide": false,
+          "measurement": "INTERFACES",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT \"out_octets_rate\"*8 FROM \"INTERFACES\" WHERE (\"device\"::tag =~ /^$rtr$/) AND $timeFilter group by if_name fill(null)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "in_octets_rate"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "device::tag",
+              "operator": "=~",
+              "value": "/^$rtr$/"
+            }
+          ]
+        }
+      ],
+      "title": "Output Interface Stats",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -1375,9 +1349,9 @@
       },
       "gridPos": {
         "h": 11,
-        "w": 8,
+        "w": 12,
         "x": 0,
-        "y": 30
+        "y": 26
       },
       "id": 6,
       "options": {
@@ -1388,7 +1362,7 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -1510,9 +1484,9 @@
       },
       "gridPos": {
         "h": 11,
-        "w": 8,
-        "x": 0,
-        "y": 41
+        "w": 12,
+        "x": 12,
+        "y": 26
       },
       "id": 26,
       "options": {
@@ -1523,7 +1497,7 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -1589,7 +1563,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "30s",
+  "refresh": "10s",
   "revision": 1,
   "schemaVersion": 39,
   "tags": [],
@@ -1597,9 +1571,9 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "rtme-mx304-06.englab.juniper.net",
-          "value": "rtme-mx304-06.englab.juniper.net"
+          "selected": true,
+          "text": "rtme-ptx10001-36mr-10.englab.juniper.net",
+          "value": "rtme-ptx10001-36mr-10.englab.juniper.net"
         },
         "datasource": {
           "type": "influxdb",
@@ -1622,13 +1596,13 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "DEMO CLOSED LOOP",
   "uid": "democlosedloop",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
