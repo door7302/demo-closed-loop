@@ -75,7 +75,17 @@ MONGO_URI = "mongodb://mongo:27017/"
 DB_NAME = "networkdb"
 
 # SLACK TOKEN
-SLACK_TOKEN="xoxb-9734040494420-9715232892391-fk8kZVxok2TQaoqHMrPSD4xH"
+SLACK_TOKEN=""
+
+# SLACK_EMOJI
+EMOJI = {
+    "warning": ":warning:",
+    "success": ":white_check_mark:",
+    "call": ":telephone_receiver:",
+    "wait": ":hourglass_flowing_sand:",
+    "action": ":wrench:",
+    "error": ":x:"
+}
 
 ######################################@ FUNCTIONS ################################
 # Function definitions
@@ -440,7 +450,7 @@ def reboot_fpc_and_wait(router_name, fpc_slot, pfe_slot, router_type):
 
     return err
 
-def write_log_to_influx(router_name, message, host="localhost", port=8086, db="demo"):
+def write_log_to_influx(router_name, message, host="localhost", port=8086, db="demo", emoji=""):
     """
     Writes a log message to InfluxDB in measurement 'logs' with a tag 'router_name'.
     Adds current UTC timestamp.
@@ -489,7 +499,9 @@ def write_log_to_influx(router_name, message, host="localhost", port=8086, db="d
     
     try:
         client = WebClient(token=SLACK_TOKEN)
-
+        emoji = EMOJI.get(emoji, "")
+        if emoji!= "":
+            message = EMOJI[emoji] + " " + message
         response = client.chat_postMessage(
             channel="#noc-support",
             text=message
@@ -523,7 +535,7 @@ def disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id
         raise SystemExit(1) 
     
     LOG.info(f"CMERROR: INTERFACES DISABLED on {cmerror_device}")
-    write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} and pfe {cmerror_pfe}", host="influxdb", port=8086, db="demo")
+    write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot} and pfe {cmerror_pfe}", host="influxdb", port=8086, db="demo", emoji="action")
 
 def upsert_or_mark_cmerror(db, error=None, router_name=None, cmerror_id=None, handled=None):
     """
@@ -805,7 +817,7 @@ for router_name in pop_routers if pop_routers else []:
 # Step 5: If no Major FPC alarms exist on any router in the POP, and action_required is set 
 
 if action_required>0:
-    write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE slot {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
+    write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE slot {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo", emoji="warning")
     write_log_to_influx(cmerror_device, f"Follow details here: https://rtme-ubuntu-07.englab.juniper.net:8080/d/democlosedloop/demo-closed-loop?orgId=1&refresh=5s&var-rtr={cmerror_device}", host="influxdb", port=8086, db="demo")
 
 if action_required == 1:
@@ -814,17 +826,17 @@ if action_required == 1:
 
     if exesting_major_alarms:
         LOG.info(f"CMERROR: Major FPC alarm exists also in POP {pop_name}, for router {other_router}, NOC action required")
-        write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, NOC action required", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, NOC action required", host="influxdb", port=8086, db="demo", emoji="warning")
     if less_than_24h:    
         LOG.info(f"CMERROR: It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required")
-        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required", host="influxdb", port=8086, db="demo", emoji="warning")
    
-    write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo")
+    write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo", emoji="call")
     write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
     upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
 
 if action_required == 2:
-    write_log_to_influx(cmerror_device, f"A new cmerror has been detected on {cmerror_device}, automatic recovery triggered", host="influxdb", port=8086, db="demo")
+    write_log_to_influx(cmerror_device, f"A new cmerror has been detected on {cmerror_device}, automatic recovery triggered", host="influxdb", port=8086, db="demo", emoji="warning")
 
     if router_type == "MX":
         # Shut down ports attached to the affected FPC 
@@ -832,26 +844,26 @@ if action_required == 2:
         interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
         if err:
             LOG.error(f"CMERROR: Unable to get interfaces from {cmerror_device}: {err}")
-            write_log_to_influx(cmerror_device, f"Unable to reboot FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Unable to reboot FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
             write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
             upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
             
             raise SystemExit(1) 
         disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc)
-        write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo")
-        write_log_to_influx(cmerror_device, f"Rebooting FPC {cmerror_slot} on device {cmerror_device}", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
+        write_log_to_influx(cmerror_device, f"Rebooting FPC {cmerror_slot} on device {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="action")
         err = reboot_fpc_and_wait(cmerror_device, cmerror_slot, cmerror_pfe, router_type)
         if err:
             LOG.error(f"CMERROR: Unable to reboot FPC {cmerror_slot} on {cmerror_device}: {err}")
-            write_log_to_influx(cmerror_device, f"Unable to reboot FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Unable to reboot FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
             write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
             upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
             
             raise SystemExit(1) 
         LOG.info(f"CMERROR: FPC {cmerror_slot} REBOOTED on {cmerror_device}")
-        write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} rebooted successfully", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} rebooted successfully", host="influxdb", port=8086, db="demo", emoji="success")
 
     if router_type == "PTX":
         
@@ -860,17 +872,17 @@ if action_required == 2:
             cmerror_pfe_instance, err = get_evo_pfe_instance(cmerror_device, cmerror_slot, cmerror_pfe)
             if err:
                 LOG.error(f"CMERROR: Unable to get PFE instance from {cmerror_device}: {err}")
-                write_log_to_influx(cmerror_device, f"Unable to reboot PFE {cmerror_pfe} on FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Unable to reboot PFE {cmerror_pfe} on FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
                 write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
                 upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
                 
                 raise SystemExit(1) 
             if cmerror_pfe_instance is None:
                 LOG.error(f"CMERROR: Unable to map PFE ID {cmerror_pfe} to instance on {cmerror_device}")
-                write_log_to_influx(cmerror_device, f"Unable to reboot PFE {cmerror_pfe} on FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Unable to reboot PFE {cmerror_pfe} on FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
                 write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
                 upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
                 
                 raise SystemExit(1) 
@@ -887,9 +899,9 @@ if action_required == 2:
         interfaces_fpc_pfe, interfaces_fpc , err = get_interfaces_by_slot(cmerror_device, cmerror_slot, cmerror_pfe)
         if err:
             LOG.error(f"CMERROR: Unable to get interfaces from {cmerror_device}: {err}")
-            write_log_to_influx(cmerror_device, f"Unable to reboot on PFE or FPC on {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Unable to reboot on PFE or FPC on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
             write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
             upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
             
             raise SystemExit(1) 
@@ -897,36 +909,36 @@ if action_required == 2:
         if "pfe" in cmerror_scope or "chip" in cmerror_scope:
             # Shut down ports attached to the affected FPC and PFE
             disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
-            write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, PFE {cmerror_slot} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo")
-            write_log_to_influx(cmerror_device, f"Rebooting PFE {cmerror_pfe} of FPC {cmerror_slot} on device {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, PFE {cmerror_slot} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
+            write_log_to_influx(cmerror_device, f"Rebooting PFE {cmerror_pfe} of FPC {cmerror_slot} on device {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="action")
             err = reboot_fpc_and_wait(cmerror_device, cmerror_slot, cmerror_pfe, router_type)
             if err:
                 LOG.error(f"CMERROR: Unable to reboot PFE {cmerror_pfe} of FPC {cmerror_slot} on {cmerror_device}: {err}")
-                write_log_to_influx(cmerror_device, f"Unable to reboot PFE {cmerror_pfe} on FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Unable to reboot PFE {cmerror_pfe} on FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
                 write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
                 upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
                 
                 raise SystemExit(1)  
             LOG.info(f"CMERROR: PFE {cmerror_pfe} of FPC {cmerror_slot} REBOOTED on {cmerror_device}")
-            write_log_to_influx(cmerror_device, f"PFE {cmerror_pfe} of FPC {cmerror_slot} on device {cmerror_device} rebooted successfully", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"PFE {cmerror_pfe} of FPC {cmerror_slot} on device {cmerror_device} rebooted successfully", host="influxdb", port=8086, db="demo", emoji="success")
                                    
         else:
             # Shut down ports attached to the affected FPC only
             disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc)
-            write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
             # Override type to reboot the whole FPC
             err = reboot_fpc_and_wait(cmerror_device, cmerror_slot, cmerror_pfe, "MX")
             if err:
                 LOG.error(f"CMERROR: Unable to reboot FPC {cmerror_slot} on {cmerror_device}: {err}")
-                write_log_to_influx(cmerror_device, f"Unable to reboot FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Unable to reboot FPC {cmerror_slot} on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
                 write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
                 upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
                 
                 raise SystemExit(1) 
             LOG.info(f"CMERROR: FPC {cmerror_slot} REBOOTED on {cmerror_device}")
-            write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} rebooted successfully", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} rebooted successfully", host="influxdb", port=8086, db="demo", emoji="success")
         
     # wait 10 seconds 
     time.sleep(10)
@@ -935,8 +947,8 @@ if action_required == 2:
     alarm_desc, err = check_fpc_major_alarm(cmerror_device, cmerror_slot)
     if err:
         LOG.error(f"CMERROR: Unable to connect to {cmerror_device}: {err}")
-        write_log_to_influx(cmerror_device, f"Unable to sanity check FPC {cmerror_slot} on {cmerror_device} after reboot", host="influxdb", port=8086, db="demo")
-        write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"Unable to sanity check FPC {cmerror_slot} on {cmerror_device} after reboot", host="influxdb", port=8086, db="demo", emoji="error")
+        write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
         write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
         upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
         
@@ -944,9 +956,9 @@ if action_required == 2:
     
     if alarm_desc:
         LOG.error(f"CMERROR: MAJOR FPC ALARM STILL EXISTS AFTER REBOOT on {cmerror_device}: {alarm_desc}")
-        write_log_to_influx(cmerror_device, f"After rebooting FPC {cmerror_slot} on device {cmerror_device}, major alarm still exists: {alarm_desc}", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"After rebooting FPC {cmerror_slot} on device {cmerror_device}, major alarm still exists: {alarm_desc}", host="influxdb", port=8086, db="demo", emoji="warning")
         write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-        write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
         upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
         
         raise SystemExit(1)
@@ -956,20 +968,20 @@ if action_required == 2:
         err = configure_interfaces_state(cmerror_device, interfaces_fpc, action="enable")
         if err:
             LOG.error(f"CMERROR: Unable to enable interfaces on {cmerror_device}: {err}")
-            write_log_to_influx(cmerror_device, f"Unable to re-enable interfaces on {cmerror_device}", host="influxdb", port=8086, db="demo")
-            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Unable to re-enable interfaces on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
+            write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
             upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
             
             raise SystemExit(1) 
         LOG.info(f"CMERROR: INTERFACES RE-ENABLED on {cmerror_device}")   
-        write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
     elif router_type == "PTX":
         if "pfe" in cmerror_scope or "chip" in cmerror_scope:
             err = configure_interfaces_state(cmerror_device, interfaces_fpc_pfe, action="enable")
             if err:
                 LOG.error(f"CMERROR: Unable to enable interfaces on {cmerror_device}: {err}")
-                write_log_to_influx(cmerror_device, f"Unable to re-enable interfaces on {cmerror_device}", host="influxdb", port=8086, db="demo")
-                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Unable to re-enable interfaces on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
+                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
                 upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
                 
                 raise SystemExit(1) 
@@ -979,34 +991,34 @@ if action_required == 2:
             err = configure_interfaces_state(cmerror_device, interfaces_fpc, action="enable")
             if err:
                 LOG.error(f"CMERROR: Unable to enable interfaces on {cmerror_device}: {err}")
-                write_log_to_influx(cmerror_device, f"Unable to re-enable interfaces on {cmerror_device}", host="influxdb", port=8086, db="demo")
-                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+                write_log_to_influx(cmerror_device, f"Unable to re-enable interfaces on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="error")
+                write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
                 upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
                 
                 raise SystemExit(1) 
             LOG.info(f"CMERROR: INTERFACES RE-ENABLED on {cmerror_device}")   
 
-            write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo")
+            write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
         
     # Wait 1 minute more before checking back chassis alarms on this router - in case traffic triggers something
     time.sleep(60)
     alarm_desc, err = check_fpc_major_alarm(cmerror_device, cmerror_slot)
     if err:
         LOG.error(f"CMERROR: Unable to connect to {cmerror_device}: {err}")
-        write_log_to_influx(cmerror_device, f"Unable to sanity check FPC {cmerror_slot} on {cmerror_device} after reboot", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"Unable to sanity check FPC {cmerror_slot} on {cmerror_device} after reboot", host="influxdb", port=8086, db="demo", emoji="error")
         write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
-        write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
         upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
         
         raise SystemExit(1) 
     
     if alarm_desc:
         LOG.error(f"CMERROR: MAJOR FPC ALARM STILL EXISTS on {cmerror_device}: {alarm_desc}")
-        write_log_to_influx(cmerror_device, f"After rebooting FPC {cmerror_slot} on device {cmerror_device}, major alarm still exists: {alarm_desc}", host="influxdb", port=8086, db="demo")
-        write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"After rebooting FPC {cmerror_slot} on device {cmerror_device}, major alarm still exists: {alarm_desc}", host="influxdb", port=8086, db="demo",emoji="warning")
+        write_log_to_influx(cmerror_device, f"Need manual action on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="call")
     else:
         LOG.info(f"CMERROR: MAJOR FPC ALARM CLEARED on {cmerror_device} EVERYTHING BACK TO NORMAL")
-        write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} is back online and major alarm cleared, interfaces re-enabled", host="influxdb", port=8086, db="demo")
+        write_log_to_influx(cmerror_device, f"FPC {cmerror_slot} on device {cmerror_device} is back online and major alarm cleared, interfaces re-enabled", host="influxdb", port=8086, db="demo", emoji="success")
 
     upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
     
