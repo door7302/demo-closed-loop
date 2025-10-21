@@ -84,7 +84,8 @@ EMOJI = {
     "call": ":telephone_receiver:",
     "wait": ":hourglass_flowing_sand:",
     "action": ":wrench:",
-    "error": ":x:"
+    "error": ":x:",
+    "screw": ":screwdriver:"
 }
 
 ######################################@ FUNCTIONS ################################
@@ -834,7 +835,7 @@ if action_required == 1:
     upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
 
 if action_required == 2:
-    write_log_to_influx(cmerror_device, f"A new cmerror has been detected on {cmerror_device}, automatic recovery triggered", host="influxdb", port=8086, db="demo", emoji="warning")
+    write_log_to_influx(cmerror_device, f"Automation logic is going to self-recover nominal state on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="screw")
 
     if router_type == "MX":
         # Shut down ports attached to the affected FPC 
@@ -907,7 +908,7 @@ if action_required == 2:
         
         if "pfe" in cmerror_scope or "chip" in cmerror_scope or "asic" in cmerror_scope:
             # Shut down ports attached to the affected FPC and PFE
-            write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, FPC slot {cmerror_slot} and ASIC instance {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
+            write_log_to_influx(cmerror_device, f"Disabling interfaces attached on {cmerror_device}, FPC slot {cmerror_slot} and ASIC instance {cmerror_pfe}", host="influxdb", port=8086, db="demo", emoji="action")
             disable_interfaces(db, cmerror_device, cmerror_slot, cmerror_pfe, cmerror_id, cmerror_desc, interfaces_fpc_pfe)
             write_log_to_influx(cmerror_device, f"Rebooting ASIC {cmerror_pfe} of FPC {cmerror_slot} on device {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="action")
             err = reboot_fpc_and_wait(cmerror_device, cmerror_slot, cmerror_pfe, router_type)

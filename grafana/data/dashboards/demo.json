@@ -24,6 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
+  "id": 2,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -215,7 +216,7 @@
           "measurement": "JUNOS_ALARMS",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "select count(last) from (SELECT last(\"alarm_text\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) AND time > now()-1m GROUP BY \"/system/alarms/alarm/id\")",
+          "query": "select count(last) from (SELECT last(\"alarm_text\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and alarm_text_net=~/.*Major*./ AND time > now()-1m GROUP BY \"/system/alarms/alarm/id\")",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -258,7 +259,7 @@
           "measurement": "JUNOS_ALARMS",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "select count(last) from (SELECT last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) AND time > now()-1m group by alarm_id_net)",
+          "query": "select count(last) from (SELECT last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and alarm_text_net=~/.*Major*./ AND time > now()-1m group by alarm_id_net)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -285,7 +286,7 @@
           ]
         }
       ],
-      "title": "ALARMS",
+      "title": "MAJOR",
       "type": "stat"
     },
     {
@@ -867,7 +868,7 @@
         ]
       },
       "gridPos": {
-        "h": 4,
+        "h": 5,
         "w": 24,
         "x": 0,
         "y": 13
@@ -899,7 +900,7 @@
           "measurement": "JUNOS_ALARMS",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"alarm_severity\"), last(\"alarm_resource\"), last(\"alarm_time\")/1000000, last(\"alarm_text\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"/system/alarms/alarm/id\"",
+          "query": "SELECT last(\"alarm_severity\"), last(\"alarm_resource\"), last(\"alarm_time\")/1000000, last(\"alarm_text\") FROM \"JUNOS_ALARMS\" WHERE alarm_severity='Major' and (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"/system/alarms/alarm/id\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -956,7 +957,7 @@
           "measurement": "JUNOS_ALARMS",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"alarm_severity_net\"), last(\"alarm_resource_net\"), last(\"alarm_time_net\"), last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"alarm_id_net\"",
+          "query": "SELECT last(\"alarm_severity_net\"), last(\"alarm_resource_net\"), last(\"alarm_time_net\"), last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE alarm_severity='Major'  and (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"alarm_id_net\"",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "table",
@@ -1003,7 +1004,7 @@
           ]
         }
       ],
-      "title": "Chassis Alarms",
+      "title": "Chassis Major Alarms",
       "transformations": [
         {
           "id": "convertFieldType",
@@ -1110,7 +1111,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 17
+        "y": 18
       },
       "id": 48,
       "options": {
@@ -1230,7 +1231,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 17
+        "y": 18
       },
       "id": 49,
       "options": {
@@ -1351,7 +1352,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 27
       },
       "id": 6,
       "options": {
@@ -1486,7 +1487,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 26
+        "y": 27
       },
       "id": 26,
       "options": {
@@ -1563,7 +1564,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "10s",
+  "refresh": "5s",
   "revision": 1,
   "schemaVersion": 39,
   "tags": [],
@@ -1571,7 +1572,7 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "rtme-ptx10001-36mr-10.englab.juniper.net",
           "value": "rtme-ptx10001-36mr-10.englab.juniper.net"
         },
@@ -1603,6 +1604,6 @@
   "timezone": "",
   "title": "DEMO CLOSED LOOP",
   "uid": "democlosedloop",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
