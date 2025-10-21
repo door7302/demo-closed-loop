@@ -986,7 +986,7 @@ if action_required == 2:
                 
                 raise SystemExit(1) 
             LOG.info(f"CMERROR: INTERFACES RE-ENABLED on {cmerror_device}")   
-            write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device}, PFE {cmerror_pfe} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
+            write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device}, FPC slot {cmerror_slot} and ASIC instance {cmerror_pfe}", host="influxdb", port=8086, db="demo", emoji="action")
         else:
             err = configure_interfaces_state(cmerror_device, interfaces_fpc, action="enable")
             if err:
