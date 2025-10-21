@@ -24,7 +24,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 2,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -216,7 +215,7 @@
           "measurement": "JUNOS_ALARMS",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "select count(last) from (SELECT last(\"alarm_text\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and alarm_text_net=~/.*Major*./ AND time > now()-1m GROUP BY \"/system/alarms/alarm/id\")",
+          "query": "select count(last) from (SELECT last(\"alarm_severity\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and alarm_severity=~/.*Major*./ AND time > now()-1m GROUP BY \"/system/alarms/alarm/id\")",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -259,7 +258,7 @@
           "measurement": "JUNOS_ALARMS",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "select count(last) from (SELECT last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and alarm_text_net=~/.*Major*./ AND time > now()-1m group by alarm_id_net)",
+          "query": "select count(last) from (SELECT last(\"alarm_severity_net\") FROM \"JUNOS_ALARMS\" WHERE (\"device\" =~ /^$rtr$/) and alarm_severity_net=~/.*Major*./ AND time > now()-1m group by alarm_id_net)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -957,7 +956,7 @@
           "measurement": "JUNOS_ALARMS",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"alarm_severity_net\"), last(\"alarm_resource_net\"), last(\"alarm_time_net\"), last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE alarm_severity='Major'  and (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"alarm_id_net\"",
+          "query": "SELECT last(\"alarm_severity_net\"), last(\"alarm_resource_net\"), last(\"alarm_time_net\"), last(\"alarm_text_net\") FROM \"JUNOS_ALARMS\" WHERE alarm_severity_net='Major'  and (\"device\" =~ /^$rtr$/) and  time > now()-1m GROUP BY \"alarm_id_net\"",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "table",
@@ -1604,6 +1603,6 @@
   "timezone": "",
   "title": "DEMO CLOSED LOOP",
   "uid": "democlosedloop",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
