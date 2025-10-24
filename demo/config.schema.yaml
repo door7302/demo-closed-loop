@@ -1,6 +1,6 @@
 demo:
   type: object
-  title: Demo Pack Config Schema
+  title: Demo Pack for CLosed Loop Automation
   description: Configuration schema for the demo pack
   properties:
     message_sensor:
@@ -26,4 +26,4 @@ demo:
               trigger: "demo.cmerror_trigger"
       additionalProperties: false
   additionalProperties: false
-  required: true   # ✅ must be boolean, not a list
+  required: true   

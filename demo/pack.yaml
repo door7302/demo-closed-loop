@@ -1,6 +1,6 @@
 ---
 name: demo
-description: "Demo pack for Kafka cmerror sensor"
+description: "Demo pack for Closed Loop Automation Demo"
 version: 1.0.0
-author: "Your Name"
-email: "you@example.com"
+author: "Davir Roy"
+email: "droy@juniper.net"

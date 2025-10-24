@@ -1,3 +1,1 @@
-# Close loop automation demo
-
-to do
+This is a demo Pack for illustrating Closed Loop Automation

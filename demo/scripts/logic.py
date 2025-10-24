@@ -730,6 +730,8 @@ try:
     else:
         router_type = "MX" if re.search(r'mx', router_model) else "PTX"
     
+    router_version = router.get("router_version")
+
     # --- 2️⃣ Get POP info ---
     pop_name = router.get("router_pop")
     pop_entry = db.pops.find_one({"pop_name": pop_name}, {"_id": 0})
@@ -745,16 +747,18 @@ except Exception as e:
     
     raise SystemExit(1)
 
+## Notify stack channel 
+write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE Instance {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo", emoji="warning")
+write_log_to_influx(cmerror_device, f"Router is {router_model} running {router_version} and attached to the POP {pop_name}")
+
 ##################################################################################
 # Step 3: Check if this cmerror_id already exists for this device
-
 ##################################################################################
 # Default action states:
 # 0 = no action required
 # 1 = partial action required (update within 24h)
 # 2 = full action required (new or >24h old)
 action_required = 0
-less_than_24h = False
 if cm_error and cm_error.get("handled"):
     previous_update = cm_error.get("cmerror_update")
     # Skip if same timestamp
@@ -767,7 +771,8 @@ if cm_error and cm_error.get("handled"):
 
     if time_diff < 86400:  # < 24h
         action_required = 1
-        less_than_24h = True
+        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror ID, NOC action required for repetitive alarms", host="influxdb", port=8086, db="demo", emoji="warning")
+        LOG.info(f"CMERROR: It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required")
     else:
         action_required = 2
 
@@ -791,9 +796,6 @@ upsert_or_mark_cmerror(db, error=the_error)
 ##################################################################################
 # Step 4: For each router from the same POP, connect to the router and check if Major alarms exist for any FPC 
 
-exesting_major_alarms = False
-other_router = None
-
 for router_name in pop_routers if pop_routers else []:
     # Skip the router where the ALARM was raised
     if router_name == cmerror_device:
@@ -804,38 +806,26 @@ for router_name in pop_routers if pop_routers else []:
         continue
     if alarm_desc:
         exesting_major_alarms = True
-        other_router = router_name
-
         # Override action_required to partial action only
         action_required = 1  # partial action required 
-        
+        write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, NOC action required when several Major Alarms on the same POP", host="influxdb", port=8086, db="demo", emoji="warning")
         LOG.debug(f"CMERROR: MAJOR FPC ALARM EXISTS on {router_name}: {alarm_desc}")
-        break
+    else:
+        write_log_to_influx(cmerror_device, f"No Major Alarm found on router {router_name} part of the same POP {pop_name}", host="influxdb", port=8086, db="demo", emoji="success")
+        LOG.debug(f"CMERROR: NO MAJOR ALARM FOUND ON ROUTER {router_name} PART OF THE SAME POP {pop_name}")
 
 ##################################################################################
 # Step 5: If no Major FPC alarms exist on any router in the POP, and action_required is set 
 
-if action_required>0:
-    write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE Instance {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo", emoji="warning")
-    write_log_to_influx(cmerror_device, f"Follow details here: https://rtme-ubuntu-07.englab.juniper.net:8080/d/democlosedloop/demo-closed-loop?orgId=1&refresh=5s&var-rtr={cmerror_device}", host="influxdb", port=8086, db="demo")
-
 if action_required == 1:
-    # You need the support of NOC team to open a ticket and manage this case manually
-    LOG.info(f"CMERROR: NOC ACTION REQUIRED - CONTACT NOC for FPC {cmerror_slot} on {cmerror_device}")
-
-    if exesting_major_alarms:
-        LOG.info(f"CMERROR: Major FPC alarm exists also in POP {pop_name}, for router {other_router}, NOC action required")
-        write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, NOC action required", host="influxdb", port=8086, db="demo", emoji="warning")
-    if less_than_24h:    
-        LOG.info(f"CMERROR: It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required")
-        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required", host="influxdb", port=8086, db="demo", emoji="warning")
-   
+    
     write_log_to_influx(cmerror_device, f"NOC team should open a ticket for device {cmerror_device} and FPC slot {cmerror_slot} due to cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo", emoji="call")
-    write_log_to_influx(cmerror_device, f"For more details - Use show system error {cmerror_id} on {cmerror_device}", host="influxdb", port=8086, db="demo")
+    write_log_to_influx(cmerror_device, f"For more details - Use 'show system error {cmerror_id}' on {cmerror_device}", host="influxdb", port=8086, db="demo")
     upsert_or_mark_cmerror(db, router_name=cmerror_device, cmerror_id=cmerror_id, handled=True)
 
 if action_required == 2:
     write_log_to_influx(cmerror_device, f"Automation logic is going to self-recover nominal state on {cmerror_device}", host="influxdb", port=8086, db="demo", emoji="screw")
+    write_log_to_influx(cmerror_device, f"Follow details here: https://rtme-ubuntu-07.englab.juniper.net:8080/d/democlosedloop/demo-closed-loop?orgId=1&refresh=5s&var-rtr={cmerror_device}", host="influxdb", port=8086, db="demo")
 
     if router_type == "MX":
         # Shut down ports attached to the affected FPC 
