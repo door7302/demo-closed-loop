@@ -95,6 +95,9 @@ sudo mkdir -p /opt/stackstorm
 cd /opt/stackstorm 
 
 sudo git clone https://github.com/stackstorm/st2-docker .
+
+sudo mkdir -p /opt/stackstorm/logs
+sudo touch /opt/stackstorm/logs/demo_logic.log
 ```
 
 #### Install Kafka Tools 
