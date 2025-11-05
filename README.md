@@ -4,12 +4,12 @@ This repository contains all materials and configurations to replicate in your l
 
 ![CLA Framework](assets/framework.png)
 
-Your should first install the Prerequisite tools and make the initial configuration. We assume you have 2 routers in your lab: R1 and R2 must be reachable by your CLA server throught Netconf and gNMI. You must allow the CLA server to connect to your R1 and R2 routers on ports **TCP/830** and **TCP/9339**.
+You should first install the Prerequisite tools and make the initial configuration. We assume you have 2 routers in your lab: R1 and R2 must is reachable by your CLA server through Netconf and gNMI. You must allow the CLA server to connect to your R1 and R2 routers on ports **TCP/830** and **TCP/9339**.
 
 > Make sure ACL or other Firewall rules allow these 2 flows. 
 
-We also consider you CLA server be reachable via:
-- HTTP **TCP/80** or HTTTPS **TCP/443**
+We also consider you CLA server is reachable via:
+- HTTP **TCP/80** or HTTPS **TCP/443**
 - **TCP/8080**
 
 Also if you want to integrate a **Slack** channel, your VM should access to Internet. 
@@ -20,7 +20,7 @@ The following picture illustrates the topology:
 
 ## Installation 
 
-We consider you use a Debian linux distribution with these following tools pre-installed:
+We assume you are using a Debian linux distribution with these following tools pre-installed:
 - git
 - python 3.12 (min)
 - pip3 
@@ -59,7 +59,7 @@ git clone https://github.com/door7302/close-loop-demo .
 
 > Don't forget the `.` at the end. 
 
-### Download additionnal packages and prepare environment 
+### Download additional packages and prepare environment 
 
 You may use the shell script `install.sh` to do all these tasks automatically or do it by yourself by following all steps below.
 
@@ -169,7 +169,7 @@ sudo cp -r /var/demo-repo/demo /opt/stackstorm/packs.dev/
 
 ### Provision /etc/hosts
 
-As mentionned we consider you have 2 routers **R1** and **R2**. These 2 simple hostname are used in all the config files to simplify the initial configuration. You must create 2 static entries into your `/etc/hosts`. R1 should point to the management IP address of the router you consider to be **R1**. Similary, R2 should point to the management IP address of the router you consider to be **R2** in your lab. 
+As mentioned we assume you have 2 routers **R1** and **R2**. These 2 simple hostname are used in all the config files to simplify the initial configuration. You must create 2 static entries into your `/etc/hosts`. R1 should point to the management IP address of the router you consider to be **R1**. Similary, R2 should point to the management IP address of the router you consider to be **R2** in your lab. 
 
 ```shell 
 cat /etc/hosts
@@ -260,7 +260,7 @@ You should then update the `logic.py` python script with this Token. Open the fo
 ```shell 
 vi /opt/stackstorm/packs.dev/demo/scripts/logic.py
 
-# Scroll down until you find out the SLACK_SECRET Variable and paste your Token
+# Scroll down until you find out the SLACK_TOKEN Variable and paste your Token
 
 # SLACK TOKEN
 SLACK_TOKEN="xoxb-9xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxp"
@@ -329,7 +329,7 @@ sudo docker compose up -d
  ✔ Container demo-st2client-1            Started  10.8s
 ```
 
-> This could take a few minute the first time. 
+> This could take a few minutes the first time. 
 
 ### Additionnal configuration 
 
@@ -378,11 +378,11 @@ root@7ed5112569d8:/opt/stackstorm# st2 pack install file:///opt/stackstorm/packs
 root@7ed5112569d8:/opt/stackstorm# exit
 ```
 
-Finally you must access to the Stackstorm GUI to configure the sensor. Open the web page: http(s)://<your-cla-server> 
+Finally you must access to the Stackstorm GUI to configure the sensor. Open the web page: http(s)://your-cla-server-ip 
 
 > Default credentials are st2admin/Ch@ngeMe
 
-Then, click on top of the page on the "PACKS" menu and search for the `demo` pack. Finaly copy paste the following json config in the input field. You jusst need to change the `YOUR-CLA-SERVER-IP` by the local ethernet IP of your ClA server:
+Then, click on top of the page on the "PACKS" menu and search for the `demo` pack. Finaly copy and paste the following json config in the input field. You just need to change the `YOUR-CLA-SERVER-IP` by the local ethernet IP of your ClA server:
 
 ```json
 {
@@ -425,8 +425,8 @@ root@7ed5112569d8:/opt/stackstorm# exit
 
 Depending on you configure SSL or not. 
 
-You should be able to access to Grafana GUI via: http(s)://<your-cla-server>:8080 
-You should be able to access to Stackstorm GUI via: http(s)://<your-cla-server>
+You should be able to access to Grafana GUI via: http(s)://your-cla-server-ip:8080 
+You should be able to access to Stackstorm GUI via: http(s)://your-cla-server-ip 
 
 Verify on each router the gNMI session is well established: 
 
@@ -462,7 +462,7 @@ Inserted 1 POPs
 ```
 
 2. Select a router MX or PTX and trigger an HW error
- 
+
 Either on R1 or R2, open a console and issue the following command to pick up a "Major" error id. 
 
 ![Demo](assets/topo.png)
@@ -485,7 +485,7 @@ Module-id  Name   Error-id     PFE  Level  Threshold  Count  Occurred  Cleared  
                   0x250001      1   Major      1        0       0         0        0                   XR2CHIP_ASIC_JGCI_MAJOR_CRC_ERROR
    18  EA[0:0]
                   0x240001      0   Major      1        0       0         0        0                   EACHIP_CMERROR_HMCIF_TX_INT_REG_WO_DEALLOC_IDX_UNDERFLOW
-  
+
 <-- truncated output -->
 ```
 
