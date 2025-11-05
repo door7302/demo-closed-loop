@@ -57,6 +57,8 @@ cd /var/demo-repo
 git clone https://github.com/door7302/close-loop-demo . 
 ```
 
+> Don't forget the `.` at the end. 
+
 ### Download additionnal packages and prepare environment 
 
 You may use the shell script `install.sh` to do all these tasks automatically or do it by yourself by following all steps below.
@@ -111,7 +113,7 @@ sudo mv kafka_2.13-3.8.0/* /opt/kafka/
 sudo rm -rf /tmp/kafka_2.13-3.8.0
 ```
 
-### Prepare folders
+#### Prepare folders
 
 Create all folders 
 
@@ -288,7 +290,8 @@ commit and-quit
 
 ## Launch the environment  
 
-All the containers will be download, built, and started by issuing the following command:
+All the containers will be download, built, and started by issuing the following command. 
+This requires your CLA server has access to Internet. 
 
 ```shell
 # Go to demo folder 
@@ -296,7 +299,33 @@ All the containers will be download, built, and started by issuing the following
 cd /opt/demo 
 
 sudo docker compose up -d 
+ ⠙ Network demo_public                   Created  12.1s 
+ ⠏ Network demo_private                  Created  11.9s 
+ ✔ Container influxdb                    Started   2.9s 
+ ✔ Container demo-redis-1                Started   1.9s 
+ ✔ Container demo-rabbitmq-1             Started   2.1s 
+ ✔ Container kafka                       Started   2.4s 
+ ✔ Container demo-st2makesecrets-1       Started   2.0s 
+ ✔ Container demo-mongo-1                Started   1.9s 
+ ✔ Container grafana                     Started   7.6s 
+ ✔ Container jts_telegraf                Started   6.0s 
+ ✔ Container demo-st2api-1               Started   3.0s 
+ ✔ Container demo-st2stream-1            Started   9.6s 
+ ✔ Container demo-st2workflowengine-1    Started   7.5s 
+ ✔ Container demo-st2scheduler-1         Started   7.1s 
+ ✔ Container demo-st2timersengine-1      Started   9.5s 
+ ✔ Container demo-st2notifier-1          Started   6.5s 
+ ✔ Container demo-st2rulesengine-1       Started   8.6s 
+ ✔ Container demo-st2auth-1              Started   7.7s 
+ ✔ Container demo-st2sensorcontainer-1   Started  10.3s 
+ ✔ Container demo-st2actionrunner-1      Started  10.7s 
+ ✔ Container demo-st2garbagecollector-1  Started   6.5s 
+ ✔ Container demo-st2chatops-1           Started  10.7s 
+ ✔ Container demo-st2web-1               Started  11.5s 
+ ✔ Container demo-st2client-1            Started  10.8s
 ```
+
+> This could take a few minute the first time. 
 
 ### Additionnal configuration 
 
@@ -359,7 +388,13 @@ You should be able to access to Stackstorm GUI via: http(s)://<your-cla-server>
 Verify on each router the gNMI session is well established: 
 
 ```junos
-R1> show system connection | match 9339 
+R1> show system connections | match 9339 
+tcp4       0      0  10.83.154.64.9339                             10.83.153.137.53522                           ESTABLISHED
+tcp46      0      0  *.9339                                        *.*                                           LISTEN
+
+R2> show system connection | match 9339 
+tcp6       0      0 :::9339                 :::*                    LISTEN      14000/nginx: master
+tcp6       0      0 10.83.154.6:9339        10.83.153.137:38722     ESTABLISHED 20427/nginx: worker
 ```
 
 ## Play the demo
@@ -372,12 +407,15 @@ tail -f /opt/stackstorm/logs/demo_logic.log
 
 1. Provision the inventory. 
 
-You may edit the `/opt/demo/sample_inventory.json` if needed. Just don't modify router name R1 and R2. 
+You may edit the `/opt/demo/sample_inventory.json` if needed. Just don't modify router name of R1 and R2. 
 
 ```shell
 cd /opt/demo
 
 python3 provision_mongo.py 
+Inserted 2 routers
+Inserted 1 POPs
+✅ Database initialized successfully.
 ```
 
 2. Select a router MX or PTX and trigger an HW error
@@ -386,22 +424,84 @@ Either on R1 or R2, open a console and issue the following command to pick up a 
 
 ![Demo](assets/topo.png)
 
-Choose one FPC on which you want to trigger an error. 
+Choose one FPC on which you want to trigger an error. And issue the following commands depending on the router and linecard model. You should see a long list of alarms.
 
-For all MX240, MX480, MX960, MX2K, MX10003 MPC and MX10K LC480 except the **MPC10e and MPC11e**: 
+- For all MX240, MX480, MX960, MX2K, MX10003 MPC and MX10K LC480 except the **MPC10e and MPC11e**: 
 
 **X** is the FPC/MPC Slot
 ```junos 
-start shell pfe network fpcX
+R1> start shell pfe network fpcX
 
+SMPC0(R1 vty)# show cmerror module      
+
+Module-id  Name   Error-id     PFE  Level  Threshold  Count  Occurred  Cleared  Last-occurred(ms ago)  Name
+-----------------------------------------------------------------------------------------------------------
+<-- truncated output -->
+   17  XR2CHIP(3)
+                  0x250002      1   Minor      1        0       0         0        0                   XR2CHIP_ASIC_JGCI_MINOR_CRC_ERROR
+                  0x250001      1   Major      1        0       0         0        0                   XR2CHIP_ASIC_JGCI_MAJOR_CRC_ERROR
+   18  EA[0:0]
+                  0x240001      0   Major      1        0       0         0        0                   EACHIP_CMERROR_HMCIF_TX_INT_REG_WO_DEALLOC_IDX_UNDERFLOW
+  
+<-- truncated output -->
 ```
 
-For MPC10e, MPC11e or all other MX10K MPCs or MX304 chassis and all PTX10K EVO chassis:
+Pick up one `Major` alarm related to an ASICs: XL, LU, EA... You must note: 
+
+- Module-id: here we will take an alarm related to EA[0:0], therefore the id is 18 
+- Error-id: 0x240001
+- PFE: 0 
+- Name: EACHIP_CMERROR_HMCIF_TX_INT_REG_WO_DEALLOC_IDX_UNDERFLOW
+
+Then issue the command to trigger the alarm: 
 
 **X** is the FPC/MPC Slot
 ```junos 
-start shell pfe network fpcX.0
+R1> start shell pfe network fpcX
 
+# Syntax is: test cmerror trigger-error <error-id> <pfe> <name> <module-id> 
+
+SMPC0(R1 vty)# test cmerror trigger-error 0x240001 0 EACHIP_CMERROR_HMCIF_TX_INT_REG_WO_DEALLOC_IDX_UNDERFLOW 18
+```
+
+- For MPC10e, MPC11e or all other MX10K MPCs or MX304 chassis and all PTX10K EVO chassis:
+
+**X** is the FPC/MPC Slot
+```junos 
+R2> start shell pfe network fpcX
+
+lab@R2:pfe> show cmerror module fpc X   
+
+Module-id  Name   Error-id     PFE  Level  Threshold  Count  Occured  Cleared  Last-occurred(ms ago)  Name
+---------------------------------------------------------------------------------------------------------------
+    1  fab-pfe@0
+<-- truncated output -->
+                  0x410002      5   Major      1        0       0        0        0                   Fabric_Plane_health_failure
+                  0x410007      5   Major      1        0       0        0        0                   PFE_Asic_PIO_Fault
+                  0x410008      5   Major      1        0       0        0        0                   PFE_Asic_Fabric_Self_Reachability_Fault
+    4  btchip
+<-- truncated output --> 
+                  0x450011      0   Fatal      1        0       0        0        0                   hostif_dma_3_sram_p_intr_d_dma_sram_bnk
+                  0x450012      0   Major      1        0       0        0        0                   toe_0_intr2_unaligned_memory_error_thread_3
+```
+
+
+Pick up one `Major` alarm related to an ASICs: BT, BX, ZT, YT... You must note: 
+
+- Module-id: here we will take an alarm related to btchip, therefore the id is 4
+- Error-id: 0x450012
+- PFE: 0 
+- Name: toe_0_intr2_unaligned_memory_error_thread_3
+
+Then issue the command to trigger the alarm: 
+
+**X** is the FPC/MPC Slot
+```junos 
+R1> start shell pfe network fpcX
+
+# Syntax is: test cmerror trigger-error <error-id> <pfe> <name> <module-id> 
+
+lab@R2:pfe> test cmerror trigger-error 0x450012 0 toe_0_intr2_unaligned_memory_error_thread_3 4
 ```
 
 This last command should trigger a "cmerror" Major alarm and thus trigger the following "logic":
