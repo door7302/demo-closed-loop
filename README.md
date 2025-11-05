@@ -98,6 +98,7 @@ sudo git clone https://github.com/stackstorm/st2-docker .
 
 sudo mkdir -p /opt/stackstorm/logs
 sudo touch /opt/stackstorm/logs/demo_logic.log
+chmod +666 /opt/stackstorm/logs/demo_logic.log
 ```
 
 #### Install Kafka Tools 
@@ -374,6 +375,47 @@ root@7ed5112569d8:/opt/stackstorm# st2 pack install file:///opt/stackstorm/packs
 | author      | David Roy                                 |
 +-------------+-------------------------------------------+
 
+root@7ed5112569d8:/opt/stackstorm# exit
+```
+
+Finally you must access to the Stackstorm GUI to configure the sensor. Open the web page: http(s)://<your-cla-server> 
+
+> Default credentials are st2admin/Ch@ngeMe
+
+Then, click on top of the page on the "PACKS" menu and search for the `demo` pack. Finaly copy paste the following json config in the input field. You jusst need to change the `YOUR-CLA-SERVER-IP` by the local ethernet IP of your ClA server:
+
+```json
+{
+  "message_sensor": {
+    "bootstrap_servers": "YOUR-CLA-SERVER-IP:9092",
+    "topics": [
+      {
+        "name": "cmerror",
+        "group_id": "st2_cmerror",
+        "trigger": "demo.cmerror_trigger"
+      }
+    ]
+  }
+}
+```
+
+![st2 pack config](assets/st2gui1.png)
+
+Once saved, you should see this message:
+
+![st2 saved](assets/st2gui2.png)
+
+Last action is to reload package from the `st2client` container. Follow these steps below: 
+
+```shell
+cd /opt/demo
+
+docker compose exec st2client bash 
+
+root@7ed5112569d8:/opt/stackstorm# st2 login st2admin 
+
+/!\ Password is: Ch@ngeMe 
+
 root@7ed5112569d8:/opt/stackstorm# st2ctl reload --register-all
 
 root@7ed5112569d8:/opt/stackstorm# exit
@@ -385,8 +427,6 @@ Depending on you configure SSL or not.
 
 You should be able to access to Grafana GUI via: http(s)://<your-cla-server>:8080 
 You should be able to access to Stackstorm GUI via: http(s)://<your-cla-server>
-
-> StackStorm is not used for the demo, default credentials are st2admin/Ch@ngeMe
 
 Verify on each router the gNMI session is well established: 
 

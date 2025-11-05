@@ -101,6 +101,7 @@ prepare_folders() {
     # Create Logs folder
     mkdir -p "${STACKSTORM_DIR}/logs"
     touch "${STACKSTORM_DIR}/logs/demo_logic.log"
+    chmod +666 "${STACKSTORM_DIR}/logs/demo_logic.log"
 
     # ST2 NGINX config
     mkdir -p "${STACKSTORM_DIR}/nginx"

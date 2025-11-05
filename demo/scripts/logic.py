@@ -747,9 +747,6 @@ except Exception as e:
     
     raise SystemExit(1)
 
-## Notify stack channel 
-write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE Instance {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo", emoji="warning")
-write_log_to_influx(cmerror_device, f"Router is {router_model} running {router_version} and attached to the POP {pop_name}")
 
 ##################################################################################
 # Step 3: Check if this cmerror_id already exists for this device
@@ -759,6 +756,8 @@ write_log_to_influx(cmerror_device, f"Router is {router_model} running {router_v
 # 1 = partial action required (update within 24h)
 # 2 = full action required (new or >24h old)
 action_required = 0
+repetitive=False
+
 if cm_error and cm_error.get("handled"):
     previous_update = cm_error.get("cmerror_update")
     # Skip if same timestamp
@@ -771,14 +770,20 @@ if cm_error and cm_error.get("handled"):
 
     if time_diff < 86400:  # < 24h
         action_required = 1
-        write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror ID, NOC action required for repetitive alarms", host="influxdb", port=8086, db="demo", emoji="warning")
-        LOG.info(f"CMERROR: It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required")
+        repetitive = True
     else:
         action_required = 2
 
 else:
     action_required = 2
 
+## Notify stack channel 
+write_log_to_influx(cmerror_device, f"On device {cmerror_device}, FPC slot {cmerror_slot} / PFE Instance {cmerror_pfe} raised cmerror {cmerror_desc}", host="influxdb", port=8086, db="demo", emoji="warning")
+write_log_to_influx(cmerror_device, f"Router is {router_model} running {router_version} and attached to the POP {pop_name}", host="influxdb", port=8086, db="demo")
+if repetitive:
+    write_log_to_influx(cmerror_device, f"It's less than 24 hours the {cmerror_device} experienced the same cmerror ID, NOC action required for repetitive alarms", host="influxdb", port=8086, db="demo", emoji="warning")
+    LOG.info(f"CMERROR: It's less than 24 hours the {cmerror_device} experienced the same cmerror, NOC action required")
+    
 # Prepare and upsert the ALARM entry
 the_error = {
     "router_name": cmerror_device,
@@ -795,24 +800,24 @@ upsert_or_mark_cmerror(db, error=the_error)
 
 ##################################################################################
 # Step 4: For each router from the same POP, connect to the router and check if Major alarms exist for any FPC 
-
-for router_name in pop_routers if pop_routers else []:
-    # Skip the router where the ALARM was raised
-    if router_name == cmerror_device:
-        continue
-    alarm_desc, err = check_fpc_major_alarm(router_name)
-    if err:
-        LOG.error(f"CMERROR: Unable to connect to {router_name}: {err}")
-        continue
-    if alarm_desc:
-        exesting_major_alarms = True
-        # Override action_required to partial action only
-        action_required = 1  # partial action required 
-        write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, NOC action required when several Major Alarms on the same POP", host="influxdb", port=8086, db="demo", emoji="warning")
-        LOG.debug(f"CMERROR: MAJOR FPC ALARM EXISTS on {router_name}: {alarm_desc}")
-    else:
-        write_log_to_influx(cmerror_device, f"No Major Alarm found on router {router_name} part of the same POP {pop_name}", host="influxdb", port=8086, db="demo", emoji="success")
-        LOG.debug(f"CMERROR: NO MAJOR ALARM FOUND ON ROUTER {router_name} PART OF THE SAME POP {pop_name}")
+if action_required == 2:
+    for router_name in pop_routers if pop_routers else []:
+        # Skip the router where the ALARM was raised
+        if router_name == cmerror_device:
+            continue
+        alarm_desc, err = check_fpc_major_alarm(router_name)
+        if err:
+            LOG.error(f"CMERROR: Unable to connect to {router_name}: {err}")
+            continue
+        if alarm_desc:
+            exesting_major_alarms = True
+            # Override action_required to partial action only
+            action_required = 1  # partial action required 
+            write_log_to_influx(cmerror_device, f"Major FPC alarm exists also in POP {pop_name}, for router {router_name}, NOC action required when several Major Alarms on the same POP", host="influxdb", port=8086, db="demo", emoji="warning")
+            LOG.debug(f"CMERROR: MAJOR FPC ALARM EXISTS on {router_name}: {alarm_desc}")
+        else:
+            write_log_to_influx(cmerror_device, f"No Major Alarm found on router {router_name} part of the same POP {pop_name}", host="influxdb", port=8086, db="demo", emoji="success")
+            LOG.debug(f"CMERROR: NO MAJOR ALARM FOUND ON ROUTER {router_name} PART OF THE SAME POP {pop_name}")
 
 ##################################################################################
 # Step 5: If no Major FPC alarms exist on any router in the POP, and action_required is set 
