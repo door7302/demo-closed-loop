@@ -1,13 +1,13 @@
 {
   "routers": [
     {
-      "router_name": "rtme-mx304-06.englab.juniper.net",
+      "router_name": "R1",
       "router_model": "MX304",
       "router_version": "25.2R1",
       "router_pop": "TORONTO"
     },
     {
-      "router_name": "rtme-ptx10001-36mr-10.englab.juniper.net",
+      "router_name": "R2",
       "router_model": "PTX10001-36MR",
       "router_version": "24.2R2",
       "router_pop": "TORONTO"
@@ -16,7 +16,7 @@
   "pops": [
     {
       "pop_name": "TORONTO",
-      "routers": ["rtme-mx304-06.englab.juniper.net", "rtme-ptx10001-36mr-10.englab.juniper.net"]
+      "routers": ["R1", "R2"]
     }
   ],
   "cmerrors": []

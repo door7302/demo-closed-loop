@@ -1572,8 +1572,8 @@
       {
         "current": {
           "selected": false,
-          "text": "rtme-ptx10001-36mr-10.englab.juniper.net",
-          "value": "rtme-ptx10001-36mr-10.englab.juniper.net"
+          "text": "R2",
+          "value": "R2"
         },
         "datasource": {
           "type": "influxdb",

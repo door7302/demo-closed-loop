@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# setup_demo_env.sh
-# Automated setup for StackStorm, Kafka, Telegraf, InfluxDB, Grafana demo environment
+# install.sh
+# Automated setup for PyMongo, StackStorm, Kafka, Telegraf, InfluxDB, Grafana demo environment
 #
 
 set -euo pipefail
@@ -23,6 +23,15 @@ KAFKA_URL="https://downloads.apache.org/kafka/${KAFKA_VERSION}/${KAFKA_TGZ}"
 #------------------------------------------------------------
 log() { echo -e "\033[1;32m[+] $*\033[0m"; }
 err() { echo -e "\033[1;31m[ERROR] $*\033[0m" >&2; exit 1; }
+
+#------------------------------------------------------------
+# INSTALL Mongo DB Python lib
+#------------------------------------------------------------
+install_py_mongo() {
+    log "Installing Mongo DB python package..."
+    
+    pip install pymongo
+}
 
 #------------------------------------------------------------
 # INSTALL STACKSTORM
@@ -81,6 +90,10 @@ prepare_folders() {
     cp "${DEMO_REPO}/docker-compose.yml" "${DEMO_DIR}/" || err "Missing docker-compose.yml in demo repo"
     cp "${DEMO_REPO}/.env" "${DEMO_DIR}/" || err "Missing .env file in demo repo"
 
+    # Copy mongo DB files
+    cp "${DEMO_REPO}/provision_mongo.py" "${DEMO_DIR}/" || err "Missing provision_mongo.py in demo repo"
+    cp "${DEMO_REPO}/sample_inventory.json" "${DEMO_DIR}/" || err "Missing sample_inventory.json file in demo repo"
+
     # Copy StackStorm demo packs
     mkdir -p "${STACKSTORM_DIR}/packs.dev"
     cp -r "${DEMO_REPO}/demo" "${STACKSTORM_DIR}/packs.dev/" || err "Missing /demo directory in demo repo"
@@ -101,8 +114,9 @@ prepare_folders() {
 # MAIN
 #------------------------------------------------------------
 main() {
-    log "Starting full demo environment setup..."
+    log "Starting deployment of demo environment..."
 
+    install_py_mongo
     install_stackstorm
     install_kafka
     prepare_folders

@@ -24,9 +24,9 @@ class CmErrorKafkaSensor(PollingSensor):
             demo_cfg = cfg.get('message_sensor', {})
 
             self._bootstrap_servers = demo_cfg.get('bootstrap_servers', 'localhost:9092')
-            self._topic = demo_cfg.get('topics', [{}])[0].get('name', 'default_topic')
-            self._group_id = demo_cfg.get('topics', [{}])[0].get('group_id', 'default_group')
-            self._trigger = demo_cfg.get('topics', [{}])[0].get('trigger', 'default_trigger')
+            self._topic = demo_cfg.get('topics', [{}])[0].get('name', 'cmerror')
+            self._group_id = demo_cfg.get('topics', [{}])[0].get('group_id', 'st2_cmerror')
+            self._trigger = demo_cfg.get('topics', [{}])[0].get('trigger', 'demo.cmerror_trigger')
             
             LOG.info(f"Kafka Sensor Config - Bootstrap Servers: {self._bootstrap_servers}, Topic: {self._topic}, Group ID: {self._group_id}, Trigger: {self._trigger}")
 
