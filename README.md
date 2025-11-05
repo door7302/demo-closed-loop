@@ -249,7 +249,7 @@ At the end of the install process you should see 2 tokens:
 
 Copy the second token `Bot user OAuth Token`. 
 
-Finally you should update the `logic.py` python script with this Token. Open the following file and paste the previous Token:
+You should then update the `logic.py` python script with this Token. Open the following file and paste the previous Token:
 
 ```shell 
 vi /opt/stackstorm/packs.dev/demo/scripts/logic.py
@@ -261,6 +261,8 @@ SLACK_TOKEN="xoxb-9xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxp"
 
 # Save the file
 ```
+
+Finally, thanks to the slack client, create a channel named `noc-support`
 
 ### Router Configuration 
 
