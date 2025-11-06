@@ -275,14 +275,14 @@ Finally, thanks to the slack client, create a channel named `noc-support`
 
 ### Router Configuration 
 
-On your 2 routers, apply this configuration. Don't change the `lab` password. 
+On your 2 routers, apply this configuration. Don't change the `lab` password that must be `lab123`. 
 
 ```junos
 edit exclusive
 
 # Create lab/lab123 user/pwd
 set system login user lab class super-user
-set system login user lab123 authentication plaintext-password xxxxx < lab123
+set system login user lab authentication plain-text-password
 
 # Clear Text gRPC/gNMI service
 set system services extension-service request-response grpc clear-text port 9339
