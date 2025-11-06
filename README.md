@@ -1,4 +1,4 @@
-# Closed Automation Demo
+# Closed Loop Automation Demo
 
 This repository contains all materials and configurations to replicate in your lab the HPE Juniper Networking demo about Closed Loop Automation or `CLA`. 
 
