@@ -257,7 +257,7 @@ def configure_interfaces_state(router_name, interfaces, action="disable"):
             comment = "Enabled interfaces via PyEZ script"
 
         # Load configuration (merge mode)
-        cu.load("\n".join(config_lines), format="set", merge=True)
+        cu.load("\n".join(config_lines), format="set", merge=True, ignore_warning=True)
 
         # Commit configuration
         cu.commit(comment=comment)
@@ -971,7 +971,7 @@ if action_required == 2:
         LOG.info(f"CMERROR: INTERFACES RE-ENABLED on {cmerror_device}")   
         write_log_to_influx(cmerror_device, f"Re-enabling interfaces attached on {cmerror_device} and FPC slot {cmerror_slot}", host="influxdb", port=8086, db="demo", emoji="action")
     elif router_type == "PTX":
-        if "pfe" in cmerror_scope or "chip" in cmerror_scope:
+        if "pfe" in cmerror_scope or "chip" in cmerror_scope or "asic" in cmerror_scope:
             err = configure_interfaces_state(cmerror_device, interfaces_fpc_pfe, action="enable")
             if err:
                 LOG.error(f"CMERROR: Unable to enable interfaces on {cmerror_device}: {err}")

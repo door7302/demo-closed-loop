@@ -4,6 +4,8 @@ This repository contains all materials and configurations to replicate in your l
 
 ![CLA Framework](assets/framework.png)
 
+You can also watch a recorded session of the demo: [youtube-video](https://www.youtube.com/watch?v=oVkMBBKSG0g)
+
 You should first install the Prerequisite tools and make the initial configuration. We assume you have 2 routers in your lab: R1 and R2 must is reachable by your CLA server through Netconf and gNMI. You must allow the CLA server to connect to your R1 and R2 routers on ports **TCP/830** and **TCP/9339**.
 
 > Make sure ACL or other Firewall rules allow these 2 flows. 
