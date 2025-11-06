@@ -1,22 +1,23 @@
 # Closed Loop Automation Demo
+# HPE Juniper Networking CLA Demo
 
-This repository contains all materials and configurations to replicate in your lab the HPE Juniper Networking demo about Closed Loop Automation or `CLA`. 
+This repository contains all materials and configurations needed to replicate the HPE Juniper Networking demo on Closed Loop Automation (`CLA`) in your lab.  
 
 ![CLA Framework](assets/framework.png)
 
-You can also watch a recorded session of the demo: [youtube-video](https://www.youtube.com/watch?v=oVkMBBKSG0g)
+You can also watch a recorded session of the demo: [YouTube video](https://www.youtube.com/watch?v=oVkMBBKSG0g)
 
-You should first install the Prerequisite tools and make the initial configuration. We assume you have 2 routers in your lab: R1 and R2 must is reachable by your CLA server through Netconf and gNMI. You must allow the CLA server to connect to your R1 and R2 routers on ports **TCP/830** and **TCP/9339**.
+First, install the prerequisite tools and complete the initial configuration. We assume you have two routers in your lab: **R1** and **R2**, which must be reachable by your CLA server via **Netconf** and **gNMI**. Ensure that the CLA server can connect to your R1 and R2 routers on ports **TCP/830** and **TCP/9339**.
 
-> Make sure ACL or other Firewall rules allow these 2 flows. 
+> Make sure any ACLs or other firewall rules allow these two flows.
 
-We also consider you CLA server is reachable via:
-- HTTP **TCP/80** or HTTPS **TCP/443**
-- **TCP/8080**
+We also assume your CLA server is reachable via:  
+- HTTP (**TCP/80**) or HTTPS (**TCP/443**)  
+- **TCP/8080**  
 
-Also if you want to integrate a **Slack** channel, your VM should access to Internet. 
+If you want to integrate a **Slack** channel, your VM must have Internet access.  
 
-The following picture illustrates the topology:
+The following diagram illustrates the topology:
 
 ![Topology](assets/anim.png)
 
@@ -63,7 +64,7 @@ git clone https://github.com/door7302/close-loop-demo .
 
 ### Download additional packages and prepare environment 
 
-You may use the shell script `install.sh` to do all these tasks automatically or do it by yourself by following all steps below.
+You can use the shell script `install.sh` to perform all these tasks automatically, or you can do them manually by following the steps below.
 
 ```shell
 cd /var/repo-demo
@@ -73,15 +74,16 @@ sudo chmod +x install.sh
 ./install.sh
 ```
 
-At the end of this step you should have these folders created:
-- `/opt/demo`: the demo folder where the docker-compose is located to deploy the different tools. 
-- `/opt/stacktorm`: the working folder for stackstorm.
-- `/opt/kafka`: the working folder for kafka.
-- `/opt/telegraf`: the working folder for telegraf.
-- `/opt/grafana`: the working folder for grafana.
-- `/opt/influxdb`: the working folder for influxdb.
+At the end of this step, you should have the following folders created:
 
-You can switch directly to this [step](#initial-configuration) if you used the `install.sh` script. 
+- `/opt/demo`: the demo folder containing the `docker-compose` setup for deploying the different tools.  
+- `/opt/stackstorm`: the working folder for StackStorm.  
+- `/opt/kafka`: the working folder for Kafka.  
+- `/opt/telegraf`: the working folder for Telegraf.  
+- `/opt/grafana`: the working folder for Grafana.  
+- `/opt/influxdb`: the working folder for InfluxDB.  
+
+If you used the `install.sh` script, you can skip directly to this [step](#initial-configuration).
 
 #### Install Mongo DB py package 
 
@@ -171,7 +173,7 @@ sudo cp -r /var/demo-repo/demo /opt/stackstorm/packs.dev/
 
 ### Provision /etc/hosts
 
-As mentioned we assume you have 2 routers **R1** and **R2**. These 2 simple hostname are used in all the config files to simplify the initial configuration. You must create 2 static entries into your `/etc/hosts`. R1 should point to the management IP address of the router you consider to be **R1**. Similary, R2 should point to the management IP address of the router you consider to be **R2** in your lab. 
+As mentioned, we assume you have two routers: **R1** and **R2**. These simple hostnames are used in all configuration files to simplify the initial setup. You must create two static entries in your `/etc/hosts` file. **R1** should point to the management IP address of the router you designate as R1, and **R2** should point to the management IP address of the router you designate as R2 in your lab.
 
 ```shell 
 cat /etc/hosts
@@ -182,7 +184,7 @@ y.y.y.Y R2
 
 ### Using SSL for Grafana and Stackstorm
 
-By default we use simple HTTP for both Grafana and Stacktorm. In case you'd prefer to use HTTPS instead, you should first modify the `/opt/demo/.env` file. The default HTTP config is:
+By default, we use HTTP for both Grafana and StackStorm. If you prefer to use HTTPS instead, you should first modify the `/opt/demo/.env` file. The default HTTP configuration is:
 
 ```shell 
 GRAFANA_PORT=8080
@@ -200,7 +202,7 @@ ST2_EXPOSE_HTTPS=0.0.0.0:443
 ST2WEB_HTTPS=1
 ```
 
-Then you need to edit `grafana.ini` config file to enable SSL as well. For that, edit the following file and change the variable like that. **Keep the names and paths of certificate and key unchanged.**
+Next, you need to edit the `grafana.ini` configuration file to enable SSL. To do this, modify the following file and update the variables as shown below. **Keep the certificate and key filenames and paths unchanged.**
 
 ```shell 
 cat /opt/grafana/grafana.ini
@@ -214,7 +216,7 @@ cert_file = "/tmp/st2.crt"
 cert_key ="/tmp/st2.key"
 ```
 
-Then you should put your certificate (of your CLA server and the CA certificate) into these following folders. **Keep the names unchanged.** We assume your certificate and key have respectively the name st2.crt and st2.key. 
+Next, you should place your certificates (your CLA server certificate and the CA certificate) into the following folders. **Keep the filenames unchanged.** We assume your certificate and key are named `st2.crt` and `st2.key`, respectively.
 
 ```shell 
 cp st2.key /opt/grafana/cert
@@ -234,30 +236,29 @@ update-ca-certificates
 ```
 
 ### Slack Integration 
+If you want to integrate **Slack** into the demo, you first need to follow these steps. In short, you must install the Slack client on a laptop, create a **noc-support** channel, and generate a token to allow the CLA server to post messages to this **noc-support** channel.
 
-In case you want to integrate a **Slack** in the demo, you need first to follow the following steps. In short, you must install Slack client on a laptop, create a **noc-support** channel and create a Token to allow the CLA server to publish messages under this **noc-support** channel. 
+1. Go to [https://api.slack.com/apps](https://api.slack.com/apps) and click `Create New App`, then select the `From scratch` option.
 
-First you should connect to https://api.slack.com/apps and click to `Create New App` then select `from scratch` option.
+2. Give a name to your app associated with your Slack account—for example, `cla`:
 
-Give a name to your app associated to your slack account - in my example I've chosen `cla`:
+![Create Slack App](assets/slack1.png)
 
-![create slack's app](assets/slack1.png)
+3. On the next screen, go to the `OAuth & Permissions` menu, scroll down to `Scopes`, and add the following scopes:
 
-On the next screen, go to `OAuth & Permissions` menu and scroll down until you see `Scope` and then add the following scopes:
+![Scopes Slack App](assets/slack2.png)
 
-![scopes slack's app](assets/slack2.png)
+4. Then go to the `Install App` menu and click the `Install <app name>` button:
 
-Then go to the `Install App` menu and click on the `Install xxx` button
+![Install Slack App](assets/slack3.png)
 
-![install slack's app](assets/slack3.png)
+5. At the end of the installation process, you should see two tokens:
 
-At the end of the install process you should see 2 tokens:
+![Slack App Token](assets/slack4.png)
 
-![slack's app token](assets/slack4.png)
+Copy the second token, the **Bot User OAuth Token**.
 
-Copy the second token `Bot user OAuth Token`. 
-
-You should then update the `logic.py` python script with this Token. Open the following file and paste the previous Token:
+Finally, update the `logic.py` Python script with this token. Open the following file and paste the token you just copied:
 
 ```shell 
 vi /opt/stackstorm/packs.dev/demo/scripts/logic.py
@@ -296,8 +297,8 @@ commit and-quit
 
 ## Launch the environment  
 
-All the containers will be download, built, and started by issuing the following command. 
-This requires your CLA server has access to Internet. 
+All the containers will be downloaded, built, and started by running the following command.  
+This requires that your CLA server has Internet access.
 
 ```shell
 # Go to demo folder 
@@ -345,7 +346,7 @@ kafka-topics.sh --create --bootstrap-server 10.83.153.137:9092 --replication-fac
 kafka-topics.sh --list --bootstrap-server 10.83.153.137:9092
 ```
 
-Then you must install the Stackstorm **demo** Pack. You should first connect to the **st2client** container and issue some **st2** commands: 
+Next, you must install the StackStorm **demo** Pack. First, connect to the **st2client** container and run the following **st2** commands:
 
 ```shell
 cd /opt/demo
@@ -380,11 +381,11 @@ root@7ed5112569d8:/opt/stackstorm# st2 pack install file:///opt/stackstorm/packs
 root@7ed5112569d8:/opt/stackstorm# exit
 ```
 
-Finally you must access to the Stackstorm GUI to configure the sensor. Open the web page: http(s)://your-cla-server-ip 
+Finally, you must access the StackStorm GUI to configure the sensor. Open the web page: `http(s)://your-cla-server-ip`.
 
-> Default credentials are st2admin/Ch@ngeMe
+> Default credentials are `st2admin/Ch@ngeMe`
 
-Then, click on top of the page on the "PACKS" menu and search for the `demo` pack. Finaly copy and paste the following json config in the input field. You just need to change the `YOUR-CLA-SERVER-IP` by the local ethernet IP of your ClA server:
+Then, click on the "PACKS" menu at the top of the page and search for the `demo` pack. Finally, copy and paste the following JSON configuration into the input field. You only need to replace `YOUR-CLA-SERVER-IP` with the local Ethernet IP of your CLA server:
 
 ```json
 {
@@ -407,7 +408,7 @@ Once saved, you should see this message:
 
 ![st2 saved](assets/st2gui2.png)
 
-Last action is to reload package from the `st2client` container. Follow these steps below: 
+The final step is to reload the package from the `st2client` container. Follow the steps below:
 
 ```shell
 cd /opt/demo
@@ -425,12 +426,12 @@ root@7ed5112569d8:/opt/stackstorm# exit
 
 ### Verifications
 
-Depending on you configure SSL or not. 
+Depending on whether you configured SSL or not:
 
-You should be able to access to Grafana GUI via: http(s)://your-cla-server-ip:8080 
-You should be able to access to Stackstorm GUI via: http(s)://your-cla-server-ip 
+- You should be able to access the Grafana GUI via: `http(s)://your-cla-server-ip:8080`  
+- You should be able to access the StackStorm GUI via: `http(s)://your-cla-server-ip`  
 
-Verify on each router the gNMI session is well established: 
+Verify on each router that the gNMI session is properly established:
 
 ```junos
 R1> show system connections | match 9339 
@@ -444,7 +445,8 @@ tcp6       0      0 10.83.154.6:9339        10.83.153.137:38722     ESTABLISHED 
 
 ## Play the demo
 
-Make sure gNMI session is up and running on both routers. Open Grafana Dashboard, Slack **noc-support** channel, if configured and a console of your CLA server and monitor the following log file:
+Make sure the gNMI session is up and running on both routers.  
+Open the Grafana dashboard, the Slack **noc-support** channel (if configured), and a console on your CLA server, then monitor the following log file:
 
 ```shell
 tail -f /opt/stackstorm/logs/demo_logic.log
@@ -452,7 +454,7 @@ tail -f /opt/stackstorm/logs/demo_logic.log
 
 1. Provision the inventory. 
 
-You may edit the `/opt/demo/sample_inventory.json` if needed. Just don't modify router name of R1 and R2. 
+You may edit the `/opt/demo/sample_inventory.json` file if needed. Just make sure not to modify the router names **R1** and **R2**.
 
 ```shell
 cd /opt/demo
@@ -462,16 +464,15 @@ Inserted 2 routers
 Inserted 1 POPs
 ✅ Database initialized successfully.
 ```
+2. Select a router (MX or PTX) and trigger a hardware error
 
-2. Select a router MX or PTX and trigger an HW error
-
-Either on R1 or R2, open a console and issue the following command to pick up a "Major" error id. 
+On either R1 or R2, open a console and run the following command to generate a "Major" error ID:
 
 ![Demo](assets/topo.png)
 
-Choose one FPC on which you want to trigger an error. And issue the following commands depending on the router and linecard model. You should see a long list of alarms.
+Choose one FPC on which you want to trigger the error, then issue the following commands depending on the router and linecard model. You should see a long list of alarms.
 
-- For all MX240, MX480, MX960, MX2K, MX10003 MPC and MX10K LC480 except the **MPC10e and MPC11e**: 
+- For all MX240, MX480, MX960, MX2K, MX10003 MPC, and MX10K LC480, except for **MPC10e** and **MPC11e**:
 
 **X** is the FPC/MPC Slot
 ```junos 
@@ -491,14 +492,14 @@ Module-id  Name   Error-id     PFE  Level  Threshold  Count  Occurred  Cleared  
 <-- truncated output -->
 ```
 
-Pick up one `Major` alarm related to an ASICs: XL, LU, EA... You must note: 
+Pick one `Major` alarm related to an ASIC (XL, LU, EA, etc.). You must note the following:
 
-- Module-id: here we will take an alarm related to EA[0:0], therefore the id is 18 
-- Error-id: 0x240001
-- PFE: 0 
-- Name: EACHIP_CMERROR_HMCIF_TX_INT_REG_WO_DEALLOC_IDX_UNDERFLOW
+- **Module-id**: For example, if the alarm is related to `EA[0:0]`, the ID is `18`  
+- **Error-id**: `0x240001`  
+- **PFE**: `0`  
+- **Name**: `EACHIP_CMERROR_HMCIF_TX_INT_REG_WO_DEALLOC_IDX_UNDERFLOW`
 
-Then issue the command to trigger the alarm: 
+Then, issue the command to trigger the alarm:
 
 **X** is the FPC/MPC Slot
 ```junos 
@@ -530,15 +531,14 @@ Module-id  Name   Error-id     PFE  Level  Threshold  Count  Occured  Cleared  L
                   0x450012      0   Major      1        0       0        0        0                   toe_0_intr2_unaligned_memory_error_thread_3
 ```
 
+Pick one `Major` alarm related to an ASIC (BT, BX, ZT, YT, etc.). You must note the following:
 
-Pick up one `Major` alarm related to an ASICs: BT, BX, ZT, YT... You must note: 
+- **Module-id**: For example, if the alarm is related to `btchip`, the ID is `4`  
+- **Error-id**: `0x450012`  
+- **PFE**: `0`  
+- **Name**: `toe_0_intr2_unaligned_memory_error_thread_3`
 
-- Module-id: here we will take an alarm related to btchip, therefore the id is 4
-- Error-id: 0x450012
-- PFE: 0 
-- Name: toe_0_intr2_unaligned_memory_error_thread_3
-
-Then issue the command to trigger the alarm: 
+Then, issue the command to trigger the alarm:
 
 **X** is the FPC/MPC Slot
 ```junos 
@@ -549,6 +549,6 @@ R1> start shell pfe network fpcX
 lab@R2:pfe> test cmerror trigger-error 0x450012 0 toe_0_intr2_unaligned_memory_error_thread_3 4
 ```
 
-This last command should trigger a "cmerror" Major alarm and thus trigger the following "logic":
+This last command should trigger a "cmerror" Major alarm, which in turn will trigger the following "logic":
 
 ![logic to mitigate cmerror](assets/algo.png)
