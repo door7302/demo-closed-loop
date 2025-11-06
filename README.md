@@ -5,7 +5,9 @@ This repository contains all materials and configurations needed to replicate th
 
 ![CLA Framework](assets/framework.png)
 
-You can also watch a recorded session of the demo: [YouTube video](https://www.youtube.com/watch?v=oVkMBBKSG0g)
+You can also watch a recorded session of the demo: 
+- First look at the [demo animation](https://youtu.be/Iq8gHbtcY9I?si=SGFKsodqUiipfUlT)
+- Then you could watch the [demo video](https://www.youtube.com/watch?v=oVkMBBKSG0g)
 
 First, install the prerequisite tools and complete the initial configuration. We assume you have two routers in your lab: **R1** and **R2**, which must be reachable by your CLA server via **Netconf** and **gNMI**. Ensure that the CLA server can connect to your R1 and R2 routers on ports **TCP/830** and **TCP/9339**.
 
@@ -295,6 +297,14 @@ set system services netconf ssh
 commit and-quit
 ```
 
+Then, you can apply the **action-on-error** feature on each router Linecard:
+
+**X** is the FPC/MPC Slot
+```shell
+set chassis fpc X error major action log
+set chassis fpc X error major action disable-pfe
+```
+
 ## Launch the environment  
 
 All the containers will be downloaded, built, and started by running the following command.  
@@ -550,5 +560,7 @@ lab@R2:pfe> test cmerror trigger-error 0x450012 0 toe_0_intr2_unaligned_memory_e
 ```
 
 This last command should trigger a "cmerror" Major alarm, which in turn will trigger the following "logic":
+
+> Remember that an on-box action will also be automatically triggered in response to the error, thanks to the **action-on-error** feature.
 
 ![logic to mitigate cmerror](assets/algo.png)
